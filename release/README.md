@@ -10,8 +10,8 @@ In accordance with modern software release standards, compiled binaries (`.apk`,
 
 | File | Type | Size | Official Direct Download Link | Description |
 | :--- | :--- | :---: | :--- | :--- |
-| **`ITFSAcademy-v1.0.0-release.apk`** | Signed APK | 14.6 MB | [⬇️ **Download APK**](https://github.com/vishalprajapati2k25/itfs-academy-android-app/releases/download/v1.0.0/ITFSAcademy-v1.0.0-release.apk) | Standalone signed APK for direct installation, QA testing, and Appium automation. |
-| **`ITFSAcademy-v1.0.0-release.aab`** | Production AAB | 17.9 MB | [⬇️ **Download AAB**](https://github.com/vishalprajapati2k25/itfs-academy-android-app/releases/download/v1.0.0/ITFSAcademy-v1.0.0-release.aab) | Google Play Store publication bundle (Android 15 / API 35 compliant). |
+| **`ITFSAcademy-v1.0.0-release.apk`** | Signed APK | 2.2 MB | [⬇️ **Download APK**](https://github.com/vishalprajapati2k25/itfs-academy-android-app/releases/download/v1.0.0/ITFSAcademy-v1.0.0-release.apk) | Standalone signed APK for direct installation, QA testing, and Appium automation. |
+| **`ITFSAcademy-v1.0.0-release.aab`** | Production AAB | 4.1 MB | [⬇️ **Download AAB**](https://github.com/vishalprajapati2k25/itfs-academy-android-app/releases/download/v1.0.0/ITFSAcademy-v1.0.0-release.aab) | Google Play Store publication bundle (Android 15 / API 35 compliant). |
 
 > 🏷️ **GitHub Release Tag**: [`v1.0.0`](https://github.com/vishalprajapati2k25/itfs-academy-android-app/releases/tag/v1.0.0)
 
@@ -21,8 +21,8 @@ In accordance with modern software release standards, compiled binaries (`.apk`,
 
 | File | SHA-256 Checksum |
 | :--- | :--- |
-| `ITFSAcademy-v1.0.0-release.apk` | `81d49b44f0240a4b85bddc7932853812f80c57be733dad53f8b810a6c661ae3a` |
-| `ITFSAcademy-v1.0.0-release.aab` | `77f3cf259d226350b63d545f0cae3629dd591980774fef2009702536a7012fc3` |
+| `ITFSAcademy-v1.0.0-release.apk` | `9e56ed4e81f54c00ffabc4d68912fc2e525645d94167b6d54a8f106eb27fd250` |
+| `ITFSAcademy-v1.0.0-release.aab` | `5e63b393dbd5b6c5a38d8b8df1f5f30d2e7d1f3f52b8ded693461426cba502c9` |
 
 ---
 
