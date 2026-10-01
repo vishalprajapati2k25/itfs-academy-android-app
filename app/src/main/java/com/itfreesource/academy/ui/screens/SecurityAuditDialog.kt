@@ -26,8 +26,6 @@ import androidx.compose.ui.window.Dialog
 import com.itfreesource.academy.data.api.AcademyApiClient
 import com.itfreesource.academy.security.AntiTamperEngine
 import com.itfreesource.academy.security.SecurityManager
-import com.itfreesource.academy.ui.components.DuolingoButton
-import com.itfreesource.academy.ui.components.DuoButtonVariant
 import com.itfreesource.academy.ui.theme.*
 import kotlinx.coroutines.launch
 
@@ -53,8 +51,8 @@ fun SecurityAuditDialog(
 
     Dialog(onDismissRequest = onDismiss) {
         Card(
-            shape = RoundedCornerShape(24.dp),
-            backgroundColor = if (isLight) DuoWhite else DuoDarkSurface,
+            shape = RoundedCornerShape(20.dp),
+            backgroundColor = if (isLight) SlateCardBg else ObsidianCardBg,
             elevation = 8.dp,
             modifier = Modifier
                 .fillMaxWidth()
@@ -75,22 +73,22 @@ fun SecurityAuditDialog(
                         Icon(
                             imageVector = Icons.Default.Shield,
                             contentDescription = "Shield",
-                            tint = DuoGreen,
+                            tint = SuccessEmerald,
                             modifier = Modifier.size(24.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = "Security & DRM Shield",
-                            fontWeight = FontWeight.Black,
+                            fontWeight = FontWeight.Bold,
                             fontSize = 18.sp,
-                            color = if (isLight) DuoDarkText else DuoDarkTextPrimary
+                            color = if (isLight) SlateTextPrimary else ObsidianTextPrimary
                         )
                     }
                     IconButton(onClick = onDismiss) {
                         Icon(
                             imageVector = Icons.Default.Close,
                             contentDescription = "Close",
-                            tint = DuoGrayText
+                            tint = ObsidianTextMuted
                         )
                     }
                 }
@@ -120,7 +118,7 @@ fun SecurityAuditDialog(
                         )
                     }
 
-                    // Check 3: Debugger & Hooking Shield
+                    // Check 3: Debugger & Hook Detection
                     item {
                         AuditCheckItem(
                             title = "Debugger & Hook Detection (Frida/Xposed)",
@@ -129,7 +127,7 @@ fun SecurityAuditDialog(
                         )
                     }
 
-                    // Check 4: Zero Question Hardcoding (API Architecture)
+                    // Check 4: Dynamic Question API
                     item {
                         AuditCheckItem(
                             title = "Zero Hardcoded Questions in APK",
@@ -153,13 +151,13 @@ fun SecurityAuditDialog(
                         Text(
                             text = "EDGE API ARCHITECTURE",
                             fontSize = 11.sp,
-                            fontWeight = FontWeight.Black,
-                            color = DuoBlue,
+                            fontWeight = FontWeight.Bold,
+                            color = BrandIndigo,
                             letterSpacing = 1.sp
                         )
                         Spacer(modifier = Modifier.height(6.dp))
                         Card(
-                            backgroundColor = if (isLight) DuoGrayBackground else DuoDarkCard,
+                            backgroundColor = if (isLight) SlateElevatedBg else ObsidianElevatedBg,
                             shape = RoundedCornerShape(12.dp),
                             elevation = 0.dp,
                             modifier = Modifier.fillMaxWidth()
@@ -169,14 +167,14 @@ fun SecurityAuditDialog(
                                     text = "Base Gateway: ${AcademyApiClient.baseUrl}",
                                     fontSize = 11.sp,
                                     fontFamily = FontFamily.Monospace,
-                                    color = if (isLight) DuoDarkText else DuoDarkTextPrimary
+                                    color = if (isLight) SlateTextPrimary else ObsidianTextPrimary
                                 )
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(
                                     text = "Status: $connectionStatus",
                                     fontSize = 12.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = if (connectionStatus.contains("Live") || connectionStatus.contains("Cloudflare")) DuoGreenDark else DuoOrangeDark
+                                    color = if (connectionStatus.contains("Live") || connectionStatus.contains("Cloudflare")) SuccessEmerald else WarningAmber
                                 )
                             }
                         }
@@ -189,8 +187,7 @@ fun SecurityAuditDialog(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    DuolingoButton(
-                        text = if (isPinging) "Testing..." else "Test Edge API",
+                    OutlinedButton(
                         onClick = {
                             scope.launch {
                                 isPinging = true
@@ -199,17 +196,30 @@ fun SecurityAuditDialog(
                                 isPinging = false
                             }
                         },
-                        variant = DuoButtonVariant.SECONDARY,
-                        height = 44.dp,
-                        modifier = Modifier.weight(1f)
-                    )
-                    DuolingoButton(
-                        text = "Done",
+                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(44.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = BrandIndigo
+                        )
+                    ) {
+                        Text(if (isPinging) "Testing..." else "Test Edge API", fontSize = 13.sp)
+                    }
+
+                    Button(
                         onClick = onDismiss,
-                        variant = DuoButtonVariant.PRIMARY,
-                        height = 44.dp,
-                        modifier = Modifier.weight(1f)
-                    )
+                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(44.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            backgroundColor = BrandIndigo,
+                            contentColor = Color.White
+                        )
+                    ) {
+                        Text("Done", fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                    }
                 }
             }
         }
@@ -232,21 +242,21 @@ private fun AuditCheckItem(
         Icon(
             imageVector = if (isPassed) Icons.Default.CheckCircle else Icons.Default.Warning,
             contentDescription = if (isPassed) "Passed" else "Warning",
-            tint = if (isPassed) DuoGreen else DuoRed,
-            modifier = Modifier.size(22.dp)
+            tint = if (isPassed) SuccessEmerald else ErrorRose,
+            modifier = Modifier.size(20.dp)
         )
         Spacer(modifier = Modifier.width(12.dp))
         Column {
             Text(
                 text = title,
-                fontWeight = FontWeight.Bold,
+                fontWeight = FontWeight.SemiBold,
                 fontSize = 13.sp,
-                color = if (isLight) DuoDarkText else DuoDarkTextPrimary
+                color = if (isLight) SlateTextPrimary else ObsidianTextPrimary
             )
             Text(
                 text = subtitle,
                 fontSize = 11.sp,
-                color = DuoGrayText
+                color = if (isLight) SlateTextMuted else ObsidianTextMuted
             )
         }
     }

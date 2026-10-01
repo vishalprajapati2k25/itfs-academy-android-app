@@ -1,14 +1,19 @@
 package com.itfreesource.academy.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.School
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -21,9 +26,8 @@ import com.itfreesource.academy.data.model.Course
 import com.itfreesource.academy.data.model.CourseSection
 import com.itfreesource.academy.data.model.LessonNode
 import com.itfreesource.academy.data.model.UserProgress
-import com.itfreesource.academy.ui.components.DuolingoButton
-import com.itfreesource.academy.ui.components.DuoButtonVariant
-import com.itfreesource.academy.ui.components.QuestPathNode
+import com.itfreesource.academy.ui.components.CompanyBadge
+import com.itfreesource.academy.ui.components.RoleLevelBadge
 import com.itfreesource.academy.ui.theme.*
 
 @Composable
@@ -31,9 +35,8 @@ fun LearnScreen(
     currentCourse: Course?,
     curriculum: List<CourseSection>,
     progress: UserProgress,
-    onStartLesson: (LessonNode) -> Unit,
-    onRefillHearts: () -> Unit,
-    onOpenCourseCatalog: () -> Unit,
+    onOpenTopic: (LessonNode) -> Unit,
+    onOpenCatalog: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val isLight = MaterialTheme.colors.isLight
@@ -47,26 +50,28 @@ fun LearnScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.padding(24.dp)
             ) {
-                Text(text = "🎓", fontSize = 54.sp)
+                Text(text = "🎓", fontSize = 48.sp)
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    text = "Welcome to ITFS Academy!",
+                    text = "No Active Engineering Track",
                     style = MaterialTheme.typography.h2,
-                    color = if (isLight) DuoDarkText else DuoDarkTextPrimary
+                    color = if (isLight) SlateTextPrimary else ObsidianTextPrimary
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "Choose your first industry course to begin your gamified learning journey.",
-                    style = MaterialTheme.typography.body1,
-                    color = if (isLight) DuoGrayText else DuoDarkTextSecondary
+                    text = "Select a track to begin step-by-step concept learning and FAANG interview preparation.",
+                    fontSize = 14.sp,
+                    color = ObsidianTextSecondary,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
                 )
-                Spacer(modifier = Modifier.height(24.dp))
-                DuolingoButton(
-                    text = "Explore Courses",
-                    onClick = onOpenCourseCatalog,
-                    variant = DuoButtonVariant.PRIMARY,
-                    modifier = Modifier.fillMaxWidth()
-                )
+                Spacer(modifier = Modifier.height(20.dp))
+                Button(
+                    onClick = onOpenCatalog,
+                    colors = ButtonDefaults.buttonColors(backgroundColor = BrandIndigo),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text("EXPLORE TRACKS", color = Color.White, fontWeight = FontWeight.Bold)
+                }
             }
         }
         return
@@ -75,126 +80,228 @@ fun LearnScreen(
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .background(if (isLight) DuoGrayBackground else DuoDarkBackground),
-        contentPadding = PaddingValues(bottom = 80.dp)
+            .background(if (isLight) SlateLightBg else ObsidianDarkBg),
+        contentPadding = PaddingValues(16.dp, 16.dp, 16.dp, 80.dp)
     ) {
-        // Zero Hearts Warning Banner
-        if (progress.hearts <= 0) {
+        // Active Track Hero Banner
+        item {
+            Card(
+                backgroundColor = if (isLight) SlateCardBg else ObsidianCardBg,
+                shape = RoundedCornerShape(20.dp),
+                elevation = 0.dp,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 20.dp)
+                    .border(1.dp, BrandIndigo.copy(alpha = 0.4f), RoundedCornerShape(20.dp))
+            ) {
+                Column(modifier = Modifier.padding(20.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(text = currentCourse.iconEmoji, fontSize = 28.sp)
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Column {
+                                Text(
+                                    text = currentCourse.title,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 17.sp,
+                                    color = if (isLight) SlateTextPrimary else ObsidianTextPrimary
+                                )
+                                Text(
+                                    text = currentCourse.category.displayName,
+                                    fontSize = 12.sp,
+                                    color = BrandIndigo,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = currentCourse.description,
+                        fontSize = 13.sp,
+                        lineHeight = 20.sp,
+                        color = if (isLight) SlateTextSecondary else ObsidianTextSecondary
+                    )
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    // Target Companies row
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = "TARGETED FOR:",
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = ObsidianTextMuted
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            items(currentCourse.targetCompanies) { comp ->
+                                CompanyBadge(company = comp)
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Track Progress Bar
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Track Readiness",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = ObsidianTextMuted
+                        )
+                        Text(
+                            text = "${(currentCourse.progressPercent * 100).toInt()}% Complete",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = SuccessEmerald
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(6.dp))
+                    LinearProgressIndicator(
+                        progress = currentCourse.progressPercent,
+                        color = BrandIndigo,
+                        backgroundColor = if (isLight) SlateBorder else ObsidianBorder,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(8.dp)
+                            .clip(RoundedCornerShape(4.dp))
+                    )
+                }
+            }
+        }
+
+        // Section & Topic Cards
+        curriculum.forEach { section ->
             item {
+                Column(modifier = Modifier.padding(vertical = 8.dp)) {
+                    Text(
+                        text = section.title.uppercase(),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = BrandIndigo,
+                        letterSpacing = 1.sp
+                    )
+                    Text(
+                        text = section.description,
+                        fontSize = 13.sp,
+                        color = ObsidianTextMuted
+                    )
+                }
+                Spacer(modifier = Modifier.height(6.dp))
+            }
+
+            items(section.lessons) { lesson ->
                 Card(
-                    backgroundColor = DuoRedLight,
+                    backgroundColor = if (isLight) SlateCardBg else ObsidianCardBg,
                     shape = RoundedCornerShape(16.dp),
                     elevation = 0.dp,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp)
+                        .padding(vertical = 6.dp)
+                        .border(1.dp, if (isLight) SlateBorder else ObsidianBorder, RoundedCornerShape(16.dp))
+                        .clickable { onOpenTopic(lesson) }
                 ) {
                     Row(
-                        modifier = Modifier.padding(16.dp),
+                        modifier = Modifier.padding(18.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(text = "💔", fontSize = 28.sp)
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Column {
-                                Text(
-                                    text = "Out of Hearts!",
-                                    fontWeight = FontWeight.Black,
-                                    fontSize = 16.sp,
-                                    color = DuoRedDark
-                                )
-                                Text(
-                                    text = "Refill with 20 💎 Brain Gems to play",
-                                    fontSize = 13.sp,
-                                    color = DuoRedDark
-                                )
-                            }
-                        }
-                        DuolingoButton(
-                            text = "Refill",
-                            onClick = onRefillHearts,
-                            variant = DuoButtonVariant.DANGER,
-                            height = 40.dp
-                        )
-                    }
-                }
-            }
-        }
-
-        // Sections and Zig-Zag Nodes
-        curriculum.forEach { section ->
-            // Section Header Card
-            item {
-                Card(
-                    backgroundColor = DuoGreen,
-                    shape = RoundedCornerShape(16.dp),
-                    elevation = 0.dp,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 12.dp)
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.weight(1f)
                         ) {
-                            Text(
-                                text = section.title.uppercase(),
-                                fontWeight = FontWeight.Black,
-                                fontSize = 14.sp,
-                                color = DuoWhite,
-                                letterSpacing = 0.8.sp
-                            )
-                            Text(
-                                text = "${currentCourse.iconEmoji} ${currentCourse.title.take(16)}",
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 12.sp,
-                                color = DuoGreenLight
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = section.description,
-                            fontSize = 13.sp,
-                            color = DuoWhite.copy(alpha = 0.9f)
-                        )
-                    }
-                }
-            }
-
-            // Zig-zag nodes along the winding trail
-            itemsIndexed(section.lessons) { index, node ->
-                // Calculate horizontal sinusoidal offset for winding trail
-                val offsets = listOf(0.dp, 55.dp, 0.dp, (-55).dp)
-                val currentOffset = offsets[index % offsets.size]
-
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 12.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .offset(x = currentOffset)
-                            .wrapContentSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        QuestPathNode(
-                            node = node,
-                            onClick = {
-                                if (progress.hearts > 0) {
-                                    onStartLesson(node)
+                            Box(
+                                modifier = Modifier
+                                    .size(36.dp)
+                                    .clip(CircleShape)
+                                    .background(if (lesson.isCompleted) SuccessEmerald.copy(alpha = 0.15f) else BrandIndigo.copy(alpha = 0.15f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                if (lesson.isCompleted) {
+                                    Icon(
+                                        imageVector = Icons.Default.CheckCircle,
+                                        contentDescription = "Completed",
+                                        tint = SuccessEmerald,
+                                        modifier = Modifier.size(20.dp)
+                                    )
                                 } else {
-                                    onRefillHearts()
+                                    Text(
+                                        text = "${lesson.order}",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 14.sp,
+                                        color = BrandIndigo
+                                    )
                                 }
                             }
+
+                            Spacer(modifier = Modifier.width(14.dp))
+
+                            Column {
+                                Text(
+                                    text = lesson.title,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 15.sp,
+                                    color = if (isLight) SlateTextPrimary else ObsidianTextPrimary
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = lesson.subtitle,
+                                    fontSize = 12.sp,
+                                    color = ObsidianTextSecondary,
+                                    maxLines = 1
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+
+                                // Modalities pill badges
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    BadgePill(text = "📖 Concepts")
+                                    BadgePill(text = "🎯 ${lesson.mcqCount} MCQs")
+                                    BadgePill(text = "💼 ${lesson.interviewTopicsCount} FAANG Qs", highlight = true)
+                                }
+                            }
+                        }
+
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                            contentDescription = "Open Topic",
+                            tint = ObsidianTextMuted,
+                            modifier = Modifier.size(18.dp)
                         )
                     }
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun BadgePill(text: String, highlight: Boolean = false) {
+    val isLight = MaterialTheme.colors.isLight
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(6.dp))
+            .background(if (highlight) WarningAmber.copy(alpha = 0.12f) else if (isLight) SlateElevatedBg else ObsidianElevatedBg)
+            .padding(horizontal = 6.dp, vertical = 2.dp)
+    ) {
+        Text(
+            text = text,
+            fontSize = 10.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = if (highlight) WarningAmber else ObsidianTextSecondary
+        )
     }
 }

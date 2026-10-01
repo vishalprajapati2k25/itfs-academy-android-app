@@ -11,8 +11,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.OpenInNew
+import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -24,8 +23,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.itfreesource.academy.data.model.UserProgress
-import com.itfreesource.academy.ui.components.DuolingoButton
-import com.itfreesource.academy.ui.components.DuoButtonVariant
 import com.itfreesource.academy.ui.theme.*
 
 @Composable
@@ -40,122 +37,149 @@ fun ProfileScreen(
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .background(if (isLight) DuoGrayBackground else DuoDarkBackground),
+            .background(if (isLight) SlateLightBg else ObsidianDarkBg),
         contentPadding = PaddingValues(16.dp, 16.dp, 16.dp, 80.dp)
     ) {
-        // User Avatar Header
+        // User Header
         item {
             Card(
-                backgroundColor = if (isLight) DuoWhite else DuoDarkSurface,
+                backgroundColor = if (isLight) SlateCardBg else ObsidianCardBg,
                 shape = RoundedCornerShape(20.dp),
                 elevation = 0.dp,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = 16.dp)
-                    .border(1.5.dp, if (isLight) DuoGrayBorder else DuoDarkBorder, RoundedCornerShape(20.dp))
+                    .border(1.dp, if (isLight) SlateBorder else ObsidianBorder, RoundedCornerShape(20.dp))
             ) {
-                Column(
+                Row(
                     modifier = Modifier.padding(20.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(72.dp)
+                            .size(56.dp)
                             .clip(CircleShape)
-                            .background(DuoBlueLight),
+                            .background(BrandIndigo.copy(alpha = 0.15f)),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(text = "⚡", fontSize = 36.sp)
+                        Text(text = "👨‍💻", fontSize = 28.sp)
                     }
-                    Spacer(modifier = Modifier.height(10.dp))
-                    Text(
-                        text = "Academy Scholar",
-                        fontWeight = FontWeight.Black,
-                        fontSize = 20.sp,
-                        color = if (isLight) DuoDarkText else DuoDarkTextPrimary
-                    )
-                    Text(
-                        text = "student@itfreesource.com",
-                        fontSize = 13.sp,
-                        color = DuoGrayText
-                    )
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Column {
+                        Text(
+                            text = "Senior Software Engineer Candidate",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 16.sp,
+                            color = if (isLight) SlateTextPrimary else ObsidianTextPrimary
+                        )
+                        Text(
+                            text = "Preparing for L5/L6 & Staff+ Interviews",
+                            fontSize = 12.sp,
+                            color = BrandIndigo,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
                 }
             }
         }
 
-        // Stats Grid
+        // Interview Readiness Dashboard Card
         item {
             Text(
-                text = "STATISTICS",
+                text = "INTERVIEW READINESS DASHBOARD",
                 fontSize = 12.sp,
-                fontWeight = FontWeight.Black,
-                color = DuoBlue,
-                letterSpacing = 1.sp
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                StatCard(
-                    icon = "🔥",
-                    value = "${progress.streakDays}",
-                    label = "Day Streak",
-                    textColor = DuoOrange,
-                    modifier = Modifier.weight(1f)
-                )
-                StatCard(
-                    icon = "⚡",
-                    value = "${progress.totalXp}",
-                    label = "Total XP",
-                    textColor = DuoGoldDark,
-                    modifier = Modifier.weight(1f)
-                )
-            }
-            Spacer(modifier = Modifier.height(10.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                StatCard(
-                    icon = "💎",
-                    value = "${progress.brainGems}",
-                    label = "Brain Gems",
-                    textColor = DuoBlue,
-                    modifier = Modifier.weight(1f)
-                )
-                StatCard(
-                    icon = "❤️",
-                    value = "${progress.hearts} / ${progress.maxHearts}",
-                    label = "Hearts",
-                    textColor = DuoRed,
-                    modifier = Modifier.weight(1f)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(20.dp))
-        }
-
-        // Security Armor & Anti-Screen Scraping Section
-        item {
-            Text(
-                text = "CONTENT ARMOR & DRM",
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Black,
-                color = DuoGreen,
+                fontWeight = FontWeight.Bold,
+                color = BrandIndigo,
                 letterSpacing = 1.sp
             )
             Spacer(modifier = Modifier.height(8.dp))
 
             Card(
-                backgroundColor = if (isLight) DuoWhite else DuoDarkSurface,
+                backgroundColor = if (isLight) SlateCardBg else ObsidianCardBg,
                 shape = RoundedCornerShape(18.dp),
                 elevation = 0.dp,
                 modifier = Modifier
                     .fillMaxWidth()
+                    .border(1.dp, if (isLight) SlateBorder else ObsidianBorder, RoundedCornerShape(18.dp))
+            ) {
+                Column(modifier = Modifier.padding(18.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Overall Interview Preparedness",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = if (isLight) SlateTextPrimary else ObsidianTextPrimary
+                        )
+                        Text(
+                            text = "${progress.interviewReadinessScore}%",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Black,
+                            color = BrandIndigo
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+                    LinearProgressIndicator(
+                        progress = progress.interviewReadinessScore / 100f,
+                        color = BrandIndigo,
+                        backgroundColor = if (isLight) SlateBorder else ObsidianBorder,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(10.dp)
+                            .clip(RoundedCornerShape(5.dp))
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        MetricBox(
+                            value = "${progress.conceptsMasteredCount}",
+                            label = "Concepts Mastered",
+                            modifier = Modifier.weight(1f)
+                        )
+                        MetricBox(
+                            value = "${progress.mcqsSolvedCount}",
+                            label = "MCQs Solved",
+                            modifier = Modifier.weight(1f)
+                        )
+                        MetricBox(
+                            value = "${progress.longAnswersReviewedCount}",
+                            label = "FAANG Q&As",
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+        }
+
+        // Content Armor & DRM Diagnostics
+        item {
+            Text(
+                text = "CONTENT ARMOR & DRM SECURITY",
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold,
+                color = SuccessEmerald,
+                letterSpacing = 1.sp
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Card(
+                backgroundColor = if (isLight) SlateCardBg else ObsidianCardBg,
+                shape = RoundedCornerShape(16.dp),
+                elevation = 0.dp,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .border(1.dp, SuccessEmerald.copy(alpha = 0.4f), RoundedCornerShape(16.dp))
                     .clickable { onOpenSecurityAudit() }
-                    .border(1.5.dp, DuoGreen.copy(alpha = 0.5f), RoundedCornerShape(18.dp))
             ) {
                 Row(
                     modifier = Modifier.padding(16.dp),
@@ -165,105 +189,50 @@ fun ProfileScreen(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Box(
                             modifier = Modifier
-                                .size(40.dp)
+                                .size(36.dp)
                                 .clip(CircleShape)
-                                .background(DuoGreenLight),
+                                .background(SuccessEmerald.copy(alpha = 0.15f)),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Shield,
                                 contentDescription = "Security Active",
-                                tint = DuoGreenDark,
-                                modifier = Modifier.size(24.dp)
+                                tint = SuccessEmerald,
+                                modifier = Modifier.size(20.dp)
                             )
                         }
                         Spacer(modifier = Modifier.width(12.dp))
                         Column {
                             Text(
-                                text = "Anti-Scraping Shield Active",
-                                fontWeight = FontWeight.Black,
-                                fontSize = 15.sp,
-                                color = if (isLight) DuoDarkText else DuoDarkTextPrimary
+                                text = "Anti-Scraping Protection Active",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 14.sp,
+                                color = if (isLight) SlateTextPrimary else ObsidianTextPrimary
                             )
                             Text(
-                                text = "FLAG_SECURE • Anti-Tamper • DRM",
-                                fontSize = 12.sp,
-                                color = DuoGreenDark,
-                                fontWeight = FontWeight.Bold
+                                text = "FLAG_SECURE • Anti-Recompile • SHA-256 DRM",
+                                fontSize = 11.sp,
+                                color = SuccessEmerald,
+                                fontWeight = FontWeight.Medium
                             )
                         }
                     }
 
                     Text(
                         text = "AUDIT",
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Black,
-                        color = DuoGreenDark
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = SuccessEmerald
                     )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(20.dp))
-        }
-
-        // Achievements / Badges
-        item {
-            Text(
-                text = "ACADEMY BADGES",
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Black,
-                color = DuoPurple,
-                letterSpacing = 1.sp
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-
-            val badges = listOf(
-                Pair("🤖 Agent Pioneer", "Built first autonomous multi-agent cognitive loop"),
-                Pair("🛡️ OWASP Guardian", "Scored 100% on AppSec injection drills"),
-                Pair("🐍 CPython Virtuoso", "Mastered PyMalloc memory allocator internals"),
-                Pair("💎 Diamond League", "Promoted to top competitive student tier")
-            )
-
-            badges.forEach { (title, desc) ->
-                Card(
-                    backgroundColor = if (isLight) DuoWhite else DuoDarkSurface,
-                    shape = RoundedCornerShape(16.dp),
-                    elevation = 0.dp,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp)
-                        .border(1.dp, if (isLight) DuoGrayBorder else DuoDarkBorder, RoundedCornerShape(16.dp))
-                ) {
-                    Row(
-                        modifier = Modifier.padding(14.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(text = "🎖️", fontSize = 28.sp)
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Column {
-                            Text(
-                                text = title,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 14.sp,
-                                color = if (isLight) DuoDarkText else DuoDarkTextPrimary
-                            )
-                            Text(
-                                text = desc,
-                                fontSize = 12.sp,
-                                color = DuoGrayText
-                            )
-                        }
-                    }
                 }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Play Store Compliant Privacy Policy Link
+            // Privacy Policy Link
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clip(RoundedCornerShape(12.dp))
                     .clickable {
                         val browserIntent = Intent(
                             Intent.ACTION_VIEW,
@@ -276,17 +245,17 @@ fun ProfileScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Academy Privacy Policy & Data Safety",
-                    fontSize = 13.sp,
-                    color = DuoBlue,
-                    fontWeight = FontWeight.Bold
+                    text = "Academy Privacy Policy & Data Safety Disclosures",
+                    fontSize = 12.sp,
+                    color = BrandIndigo,
+                    fontWeight = FontWeight.SemiBold
                 )
                 Spacer(modifier = Modifier.width(4.dp))
                 Icon(
-                    imageVector = Icons.Default.OpenInNew,
+                    imageVector = Icons.AutoMirrored.Filled.OpenInNew,
                     contentDescription = "Open Privacy Policy",
-                    tint = DuoBlue,
-                    modifier = Modifier.size(16.dp)
+                    tint = BrandIndigo,
+                    modifier = Modifier.size(14.dp)
                 )
             }
         }
@@ -294,36 +263,33 @@ fun ProfileScreen(
 }
 
 @Composable
-private fun StatCard(
-    icon: String,
+private fun MetricBox(
     value: String,
     label: String,
-    textColor: Color,
     modifier: Modifier = Modifier
 ) {
     val isLight = MaterialTheme.colors.isLight
     Card(
-        backgroundColor = if (isLight) DuoWhite else DuoDarkSurface,
-        shape = RoundedCornerShape(16.dp),
+        backgroundColor = if (isLight) SlateElevatedBg else ObsidianElevatedBg,
+        shape = RoundedCornerShape(12.dp),
         elevation = 0.dp,
-        modifier = modifier.border(1.dp, if (isLight) DuoGrayBorder else DuoDarkBorder, RoundedCornerShape(16.dp))
+        modifier = modifier
     ) {
-        Column(modifier = Modifier.padding(14.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(text = icon, fontSize = 20.sp)
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = value,
-                    fontWeight = FontWeight.Black,
-                    fontSize = 18.sp,
-                    color = textColor
-                )
-            }
-            Spacer(modifier = Modifier.height(4.dp))
+        Column(
+            modifier = Modifier.padding(12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = value,
+                fontWeight = FontWeight.Black,
+                fontSize = 18.sp,
+                color = if (isLight) SlateTextPrimary else ObsidianTextPrimary
+            )
+            Spacer(modifier = Modifier.height(2.dp))
             Text(
                 text = label,
-                fontSize = 12.sp,
-                color = DuoGrayText,
+                fontSize = 11.sp,
+                color = ObsidianTextMuted,
                 fontWeight = FontWeight.Medium
             )
         }

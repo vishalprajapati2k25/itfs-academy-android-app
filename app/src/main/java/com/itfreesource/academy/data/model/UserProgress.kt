@@ -1,33 +1,24 @@
 package com.itfreesource.academy.data.model
 
 /**
- * UserProgress — Encapsulates student streaks, XP, currency, and league status.
+ * UserProgress — Student interview readiness, mastery metrics, and streak tracking.
  */
 data class UserProgress(
-    val streakDays: Int = 1,
-    val totalXp: Int = 120,
-    val brainGems: Int = 45,
-    val hearts: Int = 5,
-    val maxHearts: Int = 5,
+    val interviewReadinessScore: Int = 68, // Out of 100%
+    val conceptsMasteredCount: Int = 14,
+    val mcqsSolvedCount: Int = 42,
+    val longAnswersReviewedCount: Int = 19,
+    val streakDays: Int = 5,
+    val totalStudyMinutes: Int = 320,
     val activeCourseId: String = "agentic-engineering",
-    val currentLeague: String = "Diamond Tier",
-    val leagueRank: Int = 3
+    val bookmarkedQuestionIds: Set<String> = emptySet(),
+    val completedLessonIds: Set<String> = setOf("agentic-engineering_l1")
 )
 
-data class LeaderboardEntry(
-    val rank: Int,
-    val username: String,
-    val avatarEmoji: String,
-    val xpPoints: Int,
-    val streak: Int,
-    val isCurrentUser: Boolean = false
-)
-
-data class AcademyBadge(
-    val id: String,
+data class TrackSummary(
+    val courseId: String,
     val title: String,
-    val description: String,
     val iconEmoji: String,
-    val isUnlocked: Boolean,
-    val unlockedDate: String = ""
+    val progressPercent: Float,
+    val nextTopicTitle: String
 )

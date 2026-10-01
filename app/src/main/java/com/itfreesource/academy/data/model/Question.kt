@@ -3,23 +3,35 @@ package com.itfreesource.academy.data.model
 import java.security.MessageDigest
 
 /**
- * Question — Protected gamified question entity.
- * Uses SHA-256 hashed answers to prevent plain-text extraction from APKs or memory dumps.
+ * ConceptStep — Bite-sized, step-by-step deep dive into an architectural concept.
+ */
+data class ConceptStep(
+    val stepNumber: Int,
+    val title: String,
+    val summary: String,
+    val detailedExplanation: String,
+    val codeSnippet: String? = null,
+    val codeLanguage: String = "python",
+    val architecturalDiagram: String? = null,
+    val keyTakeaway: String
+)
+
+/**
+ * Question — Multiple Choice Question for quick concept validation.
  */
 data class Question(
     val id: String,
     val lessonId: String,
     val prompt: String,
-    val type: QuestionType,
+    val type: QuestionType = QuestionType.MULTIPLE_CHOICE,
     val options: List<String>,
-    val correctAnswerHash: String, // SHA-256 hash
-    val codeSnippet: String? = null,
+    val correctAnswerHash: String, // SHA-256 hash (DRM security)
+    val correctOptionIndex: Int = 0,
     val explanationHint: String = "",
-    val scrambleTokens: List<String> = emptyList() // For code reordering game mode
+    val distractorRationale: Map<Int, String> = emptyMap(),
+    val difficulty: String = "Medium",
+    val companyTag: String = "Google"
 ) {
-    /**
-     * Client-side evaluation against SHA-256 hash.
-     */
     fun isCorrectAnswer(input: String): Boolean {
         val clean = input.trim().lowercase()
         val md = MessageDigest.getInstance("SHA-256")
@@ -30,18 +42,49 @@ data class Question(
 }
 
 enum class QuestionType {
-    MULTIPLE_CHOICE, // Standard card choice
-    CODE_SCRAMBLE,   // Reorder code tokens/lines
-    TRUE_FALSE,      // Binary concept check
-    FILL_IN_BLANK    // Chip selection
+    MULTIPLE_CHOICE,
+    TRUE_FALSE,
+    CODE_ANALYSIS
 }
+
+/**
+ * InterviewQuestion — FAANG-style Long Answer format.
+ * Teaches students how to structure answers for L5/L6/Staff+ interviews.
+ */
+data class InterviewQuestion(
+    val id: String,
+    val lessonId: String,
+    val title: String,
+    val targetCompany: String,
+    val roleLevel: String, // e.g. "Senior / Staff Engineer (L5-L6)"
+    val problemStatement: String,
+    val timeEstimateMinutes: Int = 15,
+    val keyTalkingPoints: List<String>,
+    val modelAnswer: String,
+    val codeSolution: String? = null,
+    val codeLanguage: String = "python",
+    val followUpQuestions: List<String> = emptyList(),
+    val isBookmarked: Boolean = false
+)
+
+/**
+ * TopicContent — Complete modular payload for a learning topic:
+ * 1. Step-by-step concept breakdown
+ * 2. Rapid-fire MCQs
+ * 3. Deep FAANG Long Answer interview questions
+ */
+data class TopicContent(
+    val lessonId: String,
+    val title: String,
+    val overview: String,
+    val conceptSteps: List<ConceptStep>,
+    val mcqs: List<Question>,
+    val interviewQuestions: List<InterviewQuestion>
+)
 
 data class QuizSubmissionResult(
     val isCorrect: Boolean,
     val userScore: Int,
     val xpEarned: Int,
-    val gemsEarned: Int,
-    val heartsRemaining: Int,
-    val newStreak: Int,
     val explanation: String
 )

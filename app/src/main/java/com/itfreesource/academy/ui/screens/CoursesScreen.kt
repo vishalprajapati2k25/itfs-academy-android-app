@@ -11,7 +11,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -23,8 +22,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.itfreesource.academy.data.model.Course
 import com.itfreesource.academy.data.model.CourseCategory
-import com.itfreesource.academy.ui.components.DuolingoButton
-import com.itfreesource.academy.ui.components.DuoButtonVariant
+import com.itfreesource.academy.ui.components.CompanyBadge
+import com.itfreesource.academy.ui.components.RoleLevelBadge
 import com.itfreesource.academy.ui.theme.*
 
 @Composable
@@ -39,119 +38,138 @@ fun CoursesScreen(
     var searchQuery by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf<CourseCategory?>(null) }
 
-    val filteredCourses = courses.filter { course ->
-        val matchesSearch = searchQuery.isBlank() ||
-                course.title.contains(searchQuery, ignoreCase = true) ||
-                course.description.contains(searchQuery, ignoreCase = true)
-        val matchesCategory = selectedCategory == null || course.category == selectedCategory
-        matchesSearch && matchesCategory
+    val filtered = courses.filter { c ->
+        val matchesCategory = selectedCategory == null || c.category == selectedCategory
+        val matchesSearch = searchQuery.isBlank() || c.title.contains(searchQuery, ignoreCase = true) || c.description.contains(searchQuery, ignoreCase = true)
+        matchesCategory && matchesSearch
     }
 
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
-            .background(if (isLight) DuoGrayBackground else DuoDarkBackground),
+            .background(if (isLight) SlateLightBg else ObsidianDarkBg),
         contentPadding = PaddingValues(16.dp, 16.dp, 16.dp, 80.dp)
     ) {
         item {
             Text(
-                text = "ACADEMY CATALOG",
+                text = "ENGINEERING TRACKS",
                 fontSize = 12.sp,
-                fontWeight = FontWeight.Black,
-                color = DuoBlue,
+                fontWeight = FontWeight.Bold,
+                color = BrandIndigo,
                 letterSpacing = 1.sp
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = "Subscribe to Courses",
+                text = "Subscribe to Academy Tracks",
                 style = MaterialTheme.typography.h2,
-                color = if (isLight) DuoDarkText else DuoDarkTextPrimary
+                color = if (isLight) SlateTextPrimary else ObsidianTextPrimary
             )
             Text(
-                text = "Select what you want to master in Duolingo-style micro-quests.",
-                fontSize = 14.sp,
-                color = if (isLight) DuoGrayText else DuoDarkTextSecondary
+                text = "Curricula engineered for technical excellence and FAANG staff interview standards.",
+                fontSize = 13.sp,
+                color = ObsidianTextMuted
             )
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Search Input Field
+            // Search Bar
             TextField(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
-                placeholder = { Text("Search courses (e.g. Python, Agentic, AppSec...)") },
-                leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search", tint = DuoGrayText) },
+                placeholder = { Text("Search tracks (e.g. Python, Agentic, AppSec...)") },
+                leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search", tint = ObsidianTextMuted) },
                 colors = TextFieldDefaults.textFieldColors(
-                    backgroundColor = if (isLight) DuoWhite else DuoDarkSurface,
+                    backgroundColor = if (isLight) SlateCardBg else ObsidianCardBg,
                     focusedIndicatorColor = Color.Transparent,
                     unfocusedIndicatorColor = Color.Transparent
                 ),
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(14.dp),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .border(2.dp, if (isLight) DuoGrayBorder else DuoDarkBorder, RoundedCornerShape(16.dp))
+                    .border(1.dp, if (isLight) SlateBorder else ObsidianBorder, RoundedCornerShape(14.dp))
             )
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
-            // Category Filter Chips
+            // Category Chips
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 item {
-                    CategoryChip(
-                        title = "All",
-                        isSelected = selectedCategory == null,
-                        onClick = { selectedCategory = null }
-                    )
+                    val isAllSelected = selectedCategory == null
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(if (isAllSelected) BrandIndigo else if (isLight) SlateCardBg else ObsidianCardBg)
+                            .border(1.dp, if (isAllSelected) BrandIndigo else if (isLight) SlateBorder else ObsidianBorder, RoundedCornerShape(10.dp))
+                            .clickable { selectedCategory = null }
+                            .padding(horizontal = 12.dp, vertical = 6.dp)
+                    ) {
+                        Text(
+                            text = "All Tracks",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = if (isAllSelected) Color.White else ObsidianTextSecondary
+                        )
+                    }
                 }
                 items(CourseCategory.values()) { cat ->
-                    CategoryChip(
-                        title = cat.displayName,
-                        isSelected = selectedCategory == cat,
-                        onClick = { selectedCategory = if (selectedCategory == cat) null else cat }
-                    )
+                    val isSelected = selectedCategory == cat
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(if (isSelected) BrandIndigo else if (isLight) SlateCardBg else ObsidianCardBg)
+                            .border(1.dp, if (isSelected) BrandIndigo else if (isLight) SlateBorder else ObsidianBorder, RoundedCornerShape(10.dp))
+                            .clickable { selectedCategory = if (selectedCategory == cat) null else cat }
+                            .padding(horizontal = 12.dp, vertical = 6.dp)
+                    ) {
+                        Text(
+                            text = cat.displayName,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = if (isSelected) Color.White else ObsidianTextSecondary
+                        )
+                    }
                 }
             }
 
-            Spacer(modifier = Modifier.height(18.dp))
+            Spacer(modifier = Modifier.height(16.dp))
         }
 
-        // Course Cards
-        items(filteredCourses) { course ->
+        items(filtered) { course ->
             val isActive = course.id == activeCourseId
 
             Card(
-                backgroundColor = if (isLight) DuoWhite else DuoDarkSurface,
-                shape = RoundedCornerShape(20.dp),
+                backgroundColor = if (isLight) SlateCardBg else ObsidianCardBg,
+                shape = RoundedCornerShape(18.dp),
                 elevation = 0.dp,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 8.dp)
                     .border(
-                        width = if (isActive) 2.5.dp else 1.5.dp,
-                        color = if (isActive) DuoGreen else if (isLight) DuoGrayBorder else DuoDarkBorder,
-                        shape = RoundedCornerShape(20.dp)
+                        width = if (isActive) 1.5.dp else 1.dp,
+                        color = if (isActive) BrandIndigo else if (isLight) SlateBorder else ObsidianBorder,
+                        shape = RoundedCornerShape(18.dp)
                     )
             ) {
                 Column(modifier = Modifier.padding(18.dp)) {
                     Row(
-                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
-                        modifier = Modifier.fillMaxWidth()
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(text = course.iconEmoji, fontSize = 32.sp)
-                            Spacer(modifier = Modifier.width(12.dp))
+                            Text(text = course.iconEmoji, fontSize = 28.sp)
+                            Spacer(modifier = Modifier.width(10.dp))
                             Column {
                                 Text(
                                     text = course.title,
-                                    fontWeight = FontWeight.Black,
-                                    fontSize = 17.sp,
-                                    color = if (isLight) DuoDarkText else DuoDarkTextPrimary
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 16.sp,
+                                    color = if (isLight) SlateTextPrimary else ObsidianTextPrimary
                                 )
                                 Text(
                                     text = course.category.displayName,
                                     fontSize = 12.sp,
-                                    color = DuoBlue,
-                                    fontWeight = FontWeight.Bold
+                                    color = BrandIndigo,
+                                    fontWeight = FontWeight.Medium
                                 )
                             }
                         }
@@ -159,15 +177,15 @@ fun CoursesScreen(
                         if (isActive) {
                             Box(
                                 modifier = Modifier
-                                    .clip(RoundedCornerShape(12.dp))
-                                    .background(DuoGreenLight)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(BrandIndigo.copy(alpha = 0.15f))
                                     .padding(horizontal = 8.dp, vertical = 4.dp)
                             ) {
                                 Text(
                                     text = "ACTIVE",
                                     fontSize = 10.sp,
-                                    fontWeight = FontWeight.Black,
-                                    color = DuoGreenDark
+                                    fontWeight = FontWeight.Bold,
+                                    color = BrandIndigo
                                 )
                             }
                         }
@@ -177,28 +195,19 @@ fun CoursesScreen(
                     Text(
                         text = course.description,
                         fontSize = 13.sp,
-                        color = if (isLight) DuoGrayText else DuoDarkTextSecondary,
-                        lineHeight = 18.sp
+                        lineHeight = 20.sp,
+                        color = if (isLight) SlateTextSecondary else ObsidianTextSecondary
                     )
 
-                    Spacer(modifier = Modifier.height(14.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
 
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        Text(
-                            text = "🎯 ${course.levelsCount} Lessons",
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = if (isLight) DuoDarkText else DuoDarkTextPrimary
-                        )
-                        Text(
-                            text = "⚡ +${course.xpReward} XP",
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = DuoOrange
-                        )
+                    // Target Companies row
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            items(course.targetCompanies) { comp ->
+                                CompanyBadge(company = comp)
+                            }
+                        }
                     }
 
                     Spacer(modifier = Modifier.height(16.dp))
@@ -207,68 +216,45 @@ fun CoursesScreen(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        // Subscribe / Unsubscribe Toggle Button
-                        DuolingoButton(
-                            text = if (course.isSubscribed) "Subscribed" else "Subscribe",
+                        // Subscribe / Unsubscribe Toggle
+                        Button(
                             onClick = { onToggleSubscribe(course.id) },
-                            variant = if (course.isSubscribed) DuoButtonVariant.OUTLINE else DuoButtonVariant.SECONDARY,
-                            height = 44.dp,
+                            colors = ButtonDefaults.buttonColors(
+                                backgroundColor = if (course.isSubscribed) Color(0xFF1E293B) else BrandIndigo
+                            ),
+                            shape = RoundedCornerShape(10.dp),
                             modifier = Modifier.weight(1f)
-                        )
+                        ) {
+                            Text(
+                                text = if (course.isSubscribed) "SUBSCRIBED" else "SUBSCRIBE",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                        }
 
-                        // Set Active Quest Button
+                        // Study Action
                         if (!isActive) {
-                            DuolingoButton(
-                                text = "Learn",
+                            OutlinedButton(
                                 onClick = {
-                                    if (!course.isSubscribed) {
-                                        onToggleSubscribe(course.id)
-                                    }
+                                    if (!course.isSubscribed) onToggleSubscribe(course.id)
                                     onSelectActiveCourse(course.id)
                                 },
-                                variant = DuoButtonVariant.PRIMARY,
-                                height = 44.dp,
-                                modifier = Modifier.weight(0.8f)
-                            )
+                                shape = RoundedCornerShape(10.dp),
+                                border = androidx.compose.foundation.BorderStroke(1.dp, BrandIndigo),
+                                modifier = Modifier.weight(0.9f)
+                            ) {
+                                Text(
+                                    text = "STUDY TRACK",
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = BrandIndigo
+                                )
+                            }
                         }
                     }
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun CategoryChip(
-    title: String,
-    isSelected: Boolean,
-    onClick: () -> Unit
-) {
-    val isLight = MaterialTheme.colors.isLight
-    val chipBg = when {
-        isSelected -> DuoBlue
-        isLight -> DuoWhite
-        else -> DuoDarkSurface
-    }
-    val textCol = when {
-        isSelected -> DuoWhite
-        isLight -> DuoDarkText
-        else -> DuoDarkTextPrimary
-    }
-
-    Box(
-        modifier = Modifier
-            .clip(RoundedCornerShape(14.dp))
-            .background(chipBg)
-            .border(1.5.dp, if (isSelected) DuoBlue else if (isLight) DuoGrayBorder else DuoDarkBorder, RoundedCornerShape(14.dp))
-            .clickable { onClick() }
-            .padding(horizontal = 14.dp, vertical = 8.dp)
-    ) {
-        Text(
-            text = title,
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Bold,
-            color = textCol
-        )
     }
 }

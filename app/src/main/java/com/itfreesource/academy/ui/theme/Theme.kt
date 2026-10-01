@@ -7,32 +7,32 @@ import androidx.compose.material.lightColors
 import androidx.compose.runtime.Composable
 
 private val DarkColorPalette = darkColors(
-    primary = DuoGreen,
-    primaryVariant = DuoGreenDark,
-    secondary = DuoBlue,
-    background = DuoDarkBackground,
-    surface = DuoDarkSurface,
-    onPrimary = DuoWhite,
-    onSecondary = DuoWhite,
-    onBackground = DuoDarkTextPrimary,
-    onSurface = DuoDarkTextPrimary
+    primary = BrandIndigo,
+    primaryVariant = BrandIndigoDark,
+    secondary = AccentViolet,
+    background = ObsidianDarkBg,
+    surface = ObsidianCardBg,
+    onPrimary = ObsidianTextPrimary,
+    onSecondary = ObsidianTextPrimary,
+    onBackground = ObsidianTextPrimary,
+    onSurface = ObsidianTextPrimary
 )
 
 private val LightColorPalette = lightColors(
-    primary = DuoGreen,
-    primaryVariant = DuoGreenDark,
-    secondary = DuoBlue,
-    background = DuoGrayBackground,
-    surface = DuoWhite,
-    onPrimary = DuoWhite,
-    onSecondary = DuoWhite,
-    onBackground = DuoDarkText,
-    onSurface = DuoDarkText
+    primary = BrandIndigo,
+    primaryVariant = BrandIndigoDark,
+    secondary = AccentViolet,
+    background = SlateLightBg,
+    surface = SlateCardBg,
+    onPrimary = SlateLightBg,
+    onSecondary = SlateLightBg,
+    onBackground = SlateTextPrimary,
+    onSurface = SlateTextPrimary
 )
 
 @Composable
 fun ITFSAcademyTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
+    darkTheme: Boolean = true, // Default to sleek Obsidian Dark mode for developers
     content: @Composable () -> Unit
 ) {
     val colors = if (darkTheme) DarkColorPalette else LightColorPalette

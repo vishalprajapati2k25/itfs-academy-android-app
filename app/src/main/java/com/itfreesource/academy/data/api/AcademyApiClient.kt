@@ -8,18 +8,12 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.io.BufferedReader
 import java.io.InputStreamReader
-import java.io.OutputStreamWriter
 import java.net.HttpURLConnection
 import java.net.URL
 
 /**
- * AcademyApiClient — Clean REST API client connecting to ITFreeSource Academy Edge.
- *
- * Provides decoupled, section-based micro-APIs:
- * - /courses
- * - /courses/{courseId}/curriculum
- * - /lessons/{lessonId}/questions
- * - /lessons/{lessonId}/verify
+ * AcademyApiClient — REST API client connecting to ITFreeSource Academy Edge.
+ * Delivers step-by-step concept tutorials, MCQs, and FAANG Long Answer interview questions.
  */
 object AcademyApiClient {
 
@@ -31,19 +25,13 @@ object AcademyApiClient {
 
     var baseUrl: String = LIVE_ACADEMY_URL
     var isLiveConnected: Boolean = false
-    var lastSyncStatus: String = "Connected to Academy Edge (Cloudflare Network)"
+    var lastSyncStatus: String = "Edge Active (Cloudflare Serverless)"
     var lastSyncLatencyMs: Long = 0
 
     fun init(context: Context) {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
         val saved = prefs.getString(PREF_KEY_BASE_URL, null)
         baseUrl = if (!saved.isNullOrBlank()) saved else LIVE_ACADEMY_URL
-    }
-
-    fun setCustomBaseUrl(context: Context, newUrl: String) {
-        baseUrl = newUrl.trimEnd('/')
-        val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        prefs.edit().putString(PREF_KEY_BASE_URL, baseUrl).apply()
     }
 
     private fun openConnection(endpoint: String, method: String): HttpURLConnection {
@@ -53,7 +41,7 @@ object AcademyApiClient {
         conn.requestMethod = method
         conn.setRequestProperty("Accept", "application/json")
         conn.setRequestProperty("Content-Type", "application/json")
-        conn.setRequestProperty("User-Agent", "ITFS-Academy-Android/1.0.0 (API 35; Armored)")
+        conn.setRequestProperty("User-Agent", "ITFS-Academy-Pro/2.0.0 (Android; ARM64)")
         conn.connectTimeout = 4000
         conn.readTimeout = 4000
         return conn
@@ -68,17 +56,17 @@ object AcademyApiClient {
             lastSyncLatencyMs = latency
             if (code in 200..299) {
                 isLiveConnected = true
-                lastSyncStatus = "Live ($latency ms)"
+                lastSyncStatus = "Live Cloudflare Edge ($latency ms)"
                 Pair(true, latency)
             } else {
                 isLiveConnected = false
-                lastSyncStatus = "HTTP $code (Edge Offline - Seed Active)"
+                lastSyncStatus = "HTTP $code (Offline Fallback Engine Active)"
                 Pair(false, latency)
             }
         } catch (e: Exception) {
             val latency = System.currentTimeMillis() - start
             isLiveConnected = false
-            lastSyncStatus = "Offline (${e.localizedMessage ?: "Network Timeout"})"
+            lastSyncStatus = "Offline Cache Active"
             Pair(false, latency)
         }
     }
@@ -122,20 +110,9 @@ object AcademyApiClient {
         }
     }
 
-    suspend fun fetchQuestions(lessonId: String): List<Question> = withContext(Dispatchers.IO) {
-        try {
-            val conn = openConnection("/lessons/$lessonId/questions", "GET")
-            if (conn.responseCode in 200..299) {
-                val reader = BufferedReader(InputStreamReader(conn.inputStream))
-                val jsonStr = reader.readText()
-                reader.close()
-                parseQuestionsJson(lessonId, JSONArray(jsonStr))
-            } else {
-                getFallbackQuestions(lessonId)
-            }
-        } catch (e: Exception) {
-            getFallbackQuestions(lessonId)
-        }
+    suspend fun fetchTopicContent(lessonId: String): TopicContent = withContext(Dispatchers.IO) {
+        // Generates the comprehensive 3-pillar learning payload: Concepts, MCQs, Long Answer Interview
+        getFallbackTopicContent(lessonId)
     }
 
     private fun parseCourseJson(obj: JSONObject): Course {
@@ -150,7 +127,10 @@ object AcademyApiClient {
             levelsCount = obj.optInt("levelsCount", 8),
             xpReward = obj.optInt("xpReward", 150),
             isSubscribed = obj.optBoolean("isSubscribed", false),
-            progressPercent = obj.optDouble("progressPercent", 0.0).toFloat()
+            progressPercent = obj.optDouble("progressPercent", 0.0).toFloat(),
+            difficulty = obj.optString("difficulty", "Senior / Staff Track"),
+            targetCompanies = listOf("Google", "Meta", "Amazon", "Uber", "Apple"),
+            interviewWeight = obj.optString("interviewWeight", "High Frequency")
         )
     }
 
@@ -163,21 +143,18 @@ object AcademyApiClient {
             val lessons = mutableListOf<LessonNode>()
             for (j in 0 until lessonsArray.length()) {
                 val lObj = lessonsArray.getJSONObject(j)
-                val nodeTypeStr = lObj.optString("nodeType", "STANDARD_QUEST")
-                val nodeType = try { NodeType.valueOf(nodeTypeStr) } catch (_: Exception) { NodeType.STANDARD_QUEST }
-                val statusStr = lObj.optString("status", "LOCKED")
-                val status = try { NodeStatus.valueOf(statusStr) } catch (_: Exception) { NodeStatus.LOCKED }
                 lessons.add(
                     LessonNode(
                         id = lObj.getString("id"),
                         sectionId = secId,
                         title = lObj.getString("title"),
+                        subtitle = lObj.optString("subtitle", "Core Concept & FAANG Deep Dive"),
                         order = lObj.optInt("order", j + 1),
-                        nodeType = nodeType,
-                        status = status,
-                        stars = lObj.optInt("stars", 0),
-                        xpValue = lObj.optInt("xpValue", 20),
-                        estMinutes = lObj.optInt("estMinutes", 5)
+                        estMinutes = lObj.optInt("estMinutes", 15),
+                        difficulty = lObj.optString("difficulty", "Medium"),
+                        interviewTopicsCount = lObj.optInt("interviewTopicsCount", 2),
+                        mcqCount = lObj.optInt("mcqCount", 3),
+                        isCompleted = lObj.optBoolean("isCompleted", false)
                     )
                 )
             }
@@ -195,386 +172,471 @@ object AcademyApiClient {
         return sections
     }
 
-    private fun parseQuestionsJson(lessonId: String, array: JSONArray): List<Question> {
-        val list = mutableListOf<Question>()
-        for (i in 0 until array.length()) {
-            val qObj = array.getJSONObject(i)
-            val optsArray = qObj.getJSONArray("options")
-            val options = mutableListOf<String>()
-            for (k in 0 until optsArray.length()) {
-                options.add(optsArray.getString(k))
-            }
-            val tokensArray = qObj.optJSONArray("scrambleTokens")
-            val tokens = mutableListOf<String>()
-            if (tokensArray != null) {
-                for (k in 0 until tokensArray.length()) {
-                    tokens.add(tokensArray.getString(k))
-                }
-            }
-            val qTypeStr = qObj.optString("type", "MULTIPLE_CHOICE")
-            val qType = try { QuestionType.valueOf(qTypeStr) } catch (_: Exception) { QuestionType.MULTIPLE_CHOICE }
-
-            list.add(
-                Question(
-                    id = qObj.getString("id"),
-                    lessonId = lessonId,
-                    prompt = qObj.getString("prompt"),
-                    type = qType,
-                    options = options,
-                    correctAnswerHash = qObj.getString("correctAnswerHash"),
-                    codeSnippet = if (qObj.has("codeSnippet")) qObj.getString("codeSnippet") else null,
-                    explanationHint = qObj.optString("explanationHint", ""),
-                    scrambleTokens = tokens
-                )
-            )
-        }
-        return list
-    }
-
     // ------------------------------------------------------------------------
-    // HIGH-FIDELITY FALLBACK / SEED ENGINE (Academy Ecosystem Parity)
+    // HIGH-YIELD ACADEMY DATA SEED (Extracted from Real Academy Markdown Bank)
     // ------------------------------------------------------------------------
     fun getFallbackCourses(): List<Course> {
         return listOf(
             Course(
                 id = "agentic-engineering",
-                title = "Agentic Engineering & AI Agents",
+                title = "Agentic AI & Multi-Agent Swarms",
                 category = CourseCategory.AI_AGENTIC,
                 iconEmoji = "🤖",
-                description = "Master autonomous AI agents, multi-agent swarms, tool calling, memory architecture, and LLM reasoning loops.",
-                levelsCount = 8,
-                xpReward = 200,
+                description = "Master autonomous reasoning loops, tool calling schemas, long-term memory, state graphs, and halting condition guardrails.",
+                levelsCount = 7,
+                xpReward = 300,
                 isSubscribed = true,
-                progressPercent = 0.35f
+                progressPercent = 0.45f,
+                difficulty = "Staff / L6 Architecture",
+                targetCompanies = listOf("OpenAI", "Google DeepMind", "Anthropic", "Meta"),
+                interviewWeight = "Highest Frequency (2026 Hot Topic)"
+            ),
+            Course(
+                id = "python",
+                title = "CPython Internals & Low-Level Architecture",
+                category = CourseCategory.BACKEND_LANGUAGES,
+                iconEmoji = "🐍",
+                description = "Virtual machine ceval.c execution stack, PyMalloc Arenas/Pools/Blocks, bytecodes, GIL concurrency, and descriptor protocols.",
+                levelsCount = 8,
+                xpReward = 280,
+                isSubscribed = true,
+                progressPercent = 0.70f,
+                difficulty = "Senior / L5 Engineering",
+                targetCompanies = listOf("Google", "Meta", "Uber", "Netflix"),
+                interviewWeight = "Must-Know Systems"
             ),
             Course(
                 id = "appsec",
                 title = "Application Security & DevSecOps",
                 category = CourseCategory.SECURITY,
                 iconEmoji = "🛡️",
-                description = "Deep dive into threat modeling, OWASP Top 10 vulnerabilities, zero-trust architectures, and secure code review.",
-                levelsCount = 10,
-                xpReward = 250,
+                description = "Threat modeling architectures, zero-trust tokens, OWASP Top 10 exploits, SSRF bypasses, and defensive cryptographic guardrails.",
+                levelsCount = 8,
+                xpReward = 260,
                 isSubscribed = true,
-                progressPercent = 0.60f
+                progressPercent = 0.30f,
+                difficulty = "Staff Security Architect",
+                targetCompanies = listOf("CrowdStrike", "Cloudflare", "Palantir", "Amazon"),
+                interviewWeight = "High Yield"
             ),
             Course(
                 id = "playwright",
-                title = "Modern Playwright E2E Automation",
+                title = "Industrial Playwright & QE Architecture",
                 category = CourseCategory.QUALITY_ENGINEERING,
                 iconEmoji = "🎭",
-                description = "Industrial-grade browser automation, component testing, tracing, fixture architecture, and parallel CI grids.",
-                levelsCount = 8,
-                xpReward = 180,
-                isSubscribed = false,
-                progressPercent = 0.0f
-            ),
-            Course(
-                id = "python",
-                title = "Python Core & Internals Mastery",
-                category = CourseCategory.BACKEND_LANGUAGES,
-                iconEmoji = "🐍",
-                description = "CPython virtual machine internals, bytecode, PyMalloc memory management, metaclasses, and high-concurrency AsyncIO.",
-                levelsCount = 8,
+                description = "Flaky test eradication, browser context isolation, parallel workers grid, trace viewer diagnostics, and enterprise CI test pyramids.",
+                levelsCount = 6,
                 xpReward = 220,
-                isSubscribed = true,
-                progressPercent = 0.80f
-            ),
-            Course(
-                id = "typescript",
-                title = "Full-Stack TypeScript & Edge Systems",
-                category = CourseCategory.BACKEND_LANGUAGES,
-                iconEmoji = "⚡",
-                description = "Advanced type gymnastics, generic constraints, Node.js internals, and Cloudflare Workers edge serverless execution.",
-                levelsCount = 7,
-                xpReward = 190,
                 isSubscribed = false,
-                progressPercent = 0.0f
-            ),
-            Course(
-                id = "practical-qe-e2e",
-                title = "Practical QE & Enterprise Testing",
-                category = CourseCategory.QUALITY_ENGINEERING,
-                iconEmoji = "💎",
-                description = "Eliminate flaky tests, construct contract testing harnesses, perform chaos testing, and architect enterprise QA frameworks.",
-                levelsCount = 9,
-                xpReward = 210,
-                isSubscribed = false,
-                progressPercent = 0.0f
-            ),
-            Course(
-                id = "bug-bounty",
-                title = "Bug Bounty & Ethical Exploitation",
-                category = CourseCategory.SECURITY,
-                iconEmoji = "🔍",
-                description = "Reconnaissance pipelines, advanced XSS, SSRF chaining, IDOR exploitation, and crafting lucrative security disclosure reports.",
-                levelsCount = 8,
-                xpReward = 240,
-                isSubscribed = false,
-                progressPercent = 0.0f
-            ),
-            Course(
-                id = "data-science",
-                title = "Data Science & Applied ML Pipelines",
-                category = CourseCategory.AI_AGENTIC,
-                iconEmoji = "📊",
-                description = "NumPy vectorization, Pandas optimization, Scikit-learn pipelines, feature engineering, and model validation metrics.",
-                levelsCount = 8,
-                xpReward = 200,
-                isSubscribed = false,
-                progressPercent = 0.0f
-            ),
-            Course(
-                id = "java",
-                title = "Enterprise Java & Spring Cloud",
-                category = CourseCategory.BACKEND_LANGUAGES,
-                iconEmoji = "☕",
-                description = "JVM memory model, GC tuning (ZGC, G1), concurrency primitives, and resilient microservices with Spring Boot 3.",
-                levelsCount = 8,
-                xpReward = 200,
-                isSubscribed = false,
-                progressPercent = 0.0f
-            ),
-            Course(
-                id = "sql-nosql",
-                title = "Database Architecture: SQL & NoSQL",
-                category = CourseCategory.BACKEND_LANGUAGES,
-                iconEmoji = "🗄️",
-                description = "B-Tree vs LSM-Tree indexing, execution plan optimization, ACID vs BASE guarantees, and distributed consensus algorithms.",
-                levelsCount = 8,
-                xpReward = 180,
-                isSubscribed = false,
-                progressPercent = 0.0f
+                progressPercent = 0.0f,
+                difficulty = "Lead / Senior SDET",
+                targetCompanies = listOf("Microsoft", "Amazon", "Salesforce", "Atlassian"),
+                interviewWeight = "Senior Automation"
             ),
             Course(
                 id = "job-search",
-                title = "Tech Career & Staff+ Navigation",
+                title = "FAANG System Design & Bar Raiser",
                 category = CourseCategory.CAREER_NAVIGATION,
                 iconEmoji = "💼",
-                description = "FAANG system design mastery, behavioral leadership matrices, portfolio development, and executive compensation negotiation.",
+                description = "Distributed consensus, back-of-the-envelope estimation, trade-off matrices, behavioral STAR mastery, and executive level negotiation.",
                 levelsCount = 6,
-                xpReward = 150,
+                xpReward = 200,
                 isSubscribed = false,
-                progressPercent = 0.0f
+                progressPercent = 0.0f,
+                difficulty = "Principal / Director",
+                targetCompanies = listOf("Google", "Meta", "Amazon", "Apple", "Netflix"),
+                interviewWeight = "Executive Filter"
             )
         )
     }
 
     fun getFallbackCurriculum(courseId: String): List<CourseSection> {
-        val courseName = when(courseId) {
-            "agentic-engineering" -> "Agentic AI Architecture"
-            "appsec" -> "Application Security"
-            "python" -> "Python Internals"
-            "playwright" -> "Playwright Testing"
-            else -> "Core Fundamentals"
-        }
-
-        return listOf(
-            CourseSection(
-                sectionId = "${courseId}_sec_1",
-                courseId = courseId,
-                title = "Unit 1: Foundations & Core Concepts",
-                description = "Understand low-level architecture and execution lifecycle.",
-                order = 1,
-                lessons = listOf(
-                    LessonNode(
-                        id = "${courseId}_l1",
-                        sectionId = "${courseId}_sec_1",
-                        title = "Architecture Principles",
-                        order = 1,
-                        nodeType = NodeType.STANDARD_QUEST,
-                        status = NodeStatus.COMPLETED,
-                        stars = 3,
-                        xpValue = 25
-                    ),
-                    LessonNode(
-                        id = "${courseId}_l2",
-                        sectionId = "${courseId}_sec_1",
-                        title = "Execution Lifecycle",
-                        order = 2,
-                        nodeType = NodeType.STANDARD_QUEST,
-                        status = NodeStatus.AVAILABLE,
-                        stars = 0,
-                        xpValue = 25
-                    ),
-                    LessonNode(
-                        id = "${courseId}_chest_1",
-                        sectionId = "${courseId}_sec_1",
-                        title = "Brain Gems Cache",
-                        order = 3,
-                        nodeType = NodeType.MYSTERY_CHEST,
-                        status = NodeStatus.LOCKED,
-                        xpValue = 50
-                    ),
-                    LessonNode(
-                        id = "${courseId}_l3",
-                        sectionId = "${courseId}_sec_1",
-                        title = "Speed Drill: Syntax Blitz",
-                        order = 4,
-                        nodeType = NodeType.SPEED_BLITZ,
-                        status = NodeStatus.LOCKED,
-                        xpValue = 35
-                    ),
-                    LessonNode(
-                        id = "${courseId}_boss_1",
-                        sectionId = "${courseId}_sec_1",
-                        title = "Unit 1 Boss Exam",
-                        order = 5,
-                        nodeType = NodeType.BOSS_BATTLE,
-                        status = NodeStatus.LOCKED,
-                        xpValue = 50
+        return when (courseId) {
+            "python" -> listOf(
+                CourseSection(
+                    sectionId = "py_sec_1",
+                    courseId = "python",
+                    title = "Unit 1: CPython VM & Memory Model",
+                    description = "Understand low-level PyObject, PyMalloc allocators, and execution loops.",
+                    order = 1,
+                    lessons = listOf(
+                        LessonNode(
+                            id = "py_l1",
+                            sectionId = "py_sec_1",
+                            title = "Python Fundamentals & CPython Lifecycle",
+                            subtitle = "Tokenization, AST, ceval.c stack, and PyVarObject",
+                            order = 1,
+                            estMinutes = 15,
+                            difficulty = "Senior",
+                            interviewTopicsCount = 2,
+                            mcqCount = 3,
+                            isCompleted = true
+                        ),
+                        LessonNode(
+                            id = "py_l2",
+                            sectionId = "py_sec_1",
+                            title = "Data Structures & Memory Representations",
+                            subtitle = "Lists O(1) resizing, Hash Tables, and Collision resolution",
+                            order = 2,
+                            estMinutes = 20,
+                            difficulty = "Staff",
+                            interviewTopicsCount = 3,
+                            mcqCount = 3,
+                            isCompleted = false
+                        ),
+                        LessonNode(
+                            id = "py_l3",
+                            sectionId = "py_sec_1",
+                            title = "PyMalloc Allocator: Arenas, Pools & Blocks",
+                            subtitle = "Small object allocation lifecycle (<= 512 bytes)",
+                            order = 3,
+                            estMinutes = 18,
+                            difficulty = "Senior",
+                            interviewTopicsCount = 2,
+                            mcqCount = 3,
+                            isCompleted = false
+                        )
                     )
-                )
-            ),
-            CourseSection(
-                sectionId = "${courseId}_sec_2",
-                courseId = courseId,
-                title = "Unit 2: Production Patterns & Defense",
-                description = "Deploy resilient patterns and protect against real-world failures.",
-                order = 2,
-                lessons = listOf(
-                    LessonNode(
-                        id = "${courseId}_l4",
-                        sectionId = "${courseId}_sec_2",
-                        title = "Advanced Concurrency & Hooks",
-                        order = 1,
-                        nodeType = NodeType.STANDARD_QUEST,
-                        status = NodeStatus.LOCKED,
-                        xpValue = 30
-                    ),
-                    LessonNode(
-                        id = "${courseId}_l5",
-                        sectionId = "${courseId}_sec_2",
-                        title = "Fault Tolerance & Retries",
-                        order = 2,
-                        nodeType = NodeType.STANDARD_QUEST,
-                        status = NodeStatus.LOCKED,
-                        xpValue = 30
-                    ),
-                    LessonNode(
-                        id = "${courseId}_boss_2",
-                        sectionId = "${courseId}_sec_2",
-                        title = "Mastery Capstone Exam",
-                        order = 3,
-                        nodeType = NodeType.BOSS_BATTLE,
-                        status = NodeStatus.LOCKED,
-                        xpValue = 60
+                ),
+                CourseSection(
+                    sectionId = "py_sec_2",
+                    courseId = "python",
+                    title = "Unit 2: Concurrency & AsyncIO Internals",
+                    description = "Event loop mechanics, cooperative multitasking, and GIL circumvention.",
+                    order = 2,
+                    lessons = listOf(
+                        LessonNode(
+                            id = "py_l4",
+                            sectionId = "py_sec_2",
+                            title = "The GIL & Multi-Threaded CPU Bottlenecks",
+                            subtitle = "Thread switching, I/O multiplexing vs multiprocessing",
+                            order = 1,
+                            estMinutes = 15,
+                            difficulty = "Senior",
+                            interviewTopicsCount = 2,
+                            mcqCount = 3,
+                            isCompleted = false
+                        ),
+                        LessonNode(
+                            id = "py_l5",
+                            sectionId = "py_sec_2",
+                            title = "AsyncIO Event Loop Architecture",
+                            subtitle = "Epoll/kqueue selectors, Task futures, and Coroutine generators",
+                            order = 2,
+                            estMinutes = 25,
+                            difficulty = "Staff",
+                            interviewTopicsCount = 3,
+                            mcqCount = 3,
+                            isCompleted = false
+                        )
                     )
                 )
             )
-        )
+            "agentic-engineering" -> listOf(
+                CourseSection(
+                    sectionId = "ai_sec_1",
+                    courseId = "agentic-engineering",
+                    title = "Unit 1: The Agentic Mindset & Decision Matrix",
+                    description = "Transitioning from casual prompting to deterministic autonomous agent loops.",
+                    order = 1,
+                    lessons = listOf(
+                        LessonNode(
+                            id = "ai_l1",
+                            sectionId = "ai_sec_1",
+                            title = "Casual Prompting vs. Agentic Engineering",
+                            subtitle = "Deterministic vs probabilistic decision matrices",
+                            order = 1,
+                            estMinutes = 15,
+                            difficulty = "Staff",
+                            interviewTopicsCount = 2,
+                            mcqCount = 3,
+                            isCompleted = true
+                        ),
+                        LessonNode(
+                            id = "ai_l2",
+                            sectionId = "ai_sec_1",
+                            title = "The Perception-Action-Observation Loop (ReAct)",
+                            subtitle = "Tool call schemas, sandboxes, and structured outputs",
+                            order = 2,
+                            estMinutes = 18,
+                            difficulty = "Senior",
+                            interviewTopicsCount = 2,
+                            mcqCount = 3,
+                            isCompleted = false
+                        ),
+                        LessonNode(
+                            id = "ai_l3",
+                            sectionId = "ai_sec_1",
+                            title = "Halting Conditions, Safety & Death Loops",
+                            subtitle = "Recursion depth guards and CI/CD guardrails",
+                            order = 3,
+                            estMinutes = 20,
+                            difficulty = "Staff",
+                            interviewTopicsCount = 3,
+                            mcqCount = 3,
+                            isCompleted = false
+                        )
+                    )
+                )
+            )
+            else -> listOf(
+                CourseSection(
+                    sectionId = "${courseId}_sec_1",
+                    courseId = courseId,
+                    title = "Unit 1: Foundations & Architecture",
+                    description = "Core mental models and production failure modes.",
+                    order = 1,
+                    lessons = listOf(
+                        LessonNode(
+                            id = "${courseId}_l1",
+                            sectionId = "${courseId}_sec_1",
+                            title = "Architecture Principles & System Boundaries",
+                            subtitle = "High-frequency interview questions and design trade-offs",
+                            order = 1,
+                            estMinutes = 15,
+                            difficulty = "Senior",
+                            interviewTopicsCount = 2,
+                            mcqCount = 3,
+                            isCompleted = false
+                        )
+                    )
+                )
+            )
+        }
     }
 
-    fun getFallbackQuestions(lessonId: String): List<Question> {
-        // Compute SHA-256 for ground truth:
-        // "tuple" -> fb2c3dcbe52aa287c413879a8d1b4564c5058391ae4d64f361b5b0caae9397ca
-        // "true"  -> b326b5062b2f0e69046810717534cb0964a427b6c720284f0c1512e4b49e9817
-        // "false" -> 7cf2742969579eb5f346572e445da301651e3f325b086cb64b625d80fb5e36ea
-        // "jwt"   -> bcb619a9a5f78c857731737be708e1a8b0c8e1040523ec33d266ff2f74fb0117
-        // "cors"  -> d388b15d97f26792f3922de1e5be0256e6d1e4e6ab48386cd75cb39a19c636f3
-        // "tool calling" -> 5d0234b9d0dc6a41f6e2467d5893a749392e21bcaaa803ec25390ae515f403c9
+    fun getFallbackTopicContent(lessonId: String): TopicContent {
+        if (lessonId.startsWith("py")) {
+            return TopicContent(
+                lessonId = lessonId,
+                title = "CPython Lifecycle, PyObject & Memory Architecture",
+                overview = "A rigorous, step-by-step masterclass on how CPython translates source code into bytecode, executes it on a stack virtual machine, and manages small objects with the PyMalloc allocator.",
+                conceptSteps = listOf(
+                    ConceptStep(
+                        stepNumber = 1,
+                        title = "Step 1: The 4-Stage CPython Compilation Lifecycle",
+                        summary = "Traces code execution from raw text characters to VM evaluation in ceval.c.",
+                        detailedExplanation = "CPython executes Python scripts via a 4-stage pipeline:\n\n1. **Tokenization (Lexer)**: Scans characters into lexical tokens and maintains indentation stacks to emit INDENT/DEDENT tokens.\n2. **Parsing (PEG Parser)**: Validates formal grammar (Python 3.9+ uses PEG parser) to produce an Abstract Syntax Tree (AST).\n3. **Bytecode Compilation**: The Control Flow Graph (CFG) and peephole optimizer fold constants (e.g. 2 + 3 -> 5) and emit bytecode instructions (.pyc files in __pycache__).\n4. **Virtual Machine Execution**: The compiled bytecode is evaluated in `_PyEval_EvalFrameDefault` inside CPython's `ceval.c`. The VM is a stack-based evaluator.",
+                        architecturalDiagram = "Source .py -> Tokenizer -> AST -> Bytecode (.pyc) -> CPython VM (ceval.c Stack Evaluation)",
+                        keyTakeaway = "Python is compiled to bytecode before interpretation. Bytecode instructions manipulate value pointers on an evaluation frame stack."
+                    ),
+                    ConceptStep(
+                        stepNumber = 2,
+                        title = "Step 2: Low-Level PyObject & PyVarObject Structs",
+                        summary = "Everything in Python is a C structure pointer containing reference counts and type descriptors.",
+                        detailedExplanation = "In CPython, every object is rooted in the `PyObject` structure:\n\n- `ob_refcnt`: Reference counter (ssize_t) for memory tracking.\n- `ob_type`: Pointer to the PyTypeObject (e.g. &PyTuple_Type or &PyList_Type).\n\nFor variable-sized containers like lists and strings, `PyVarObject` adds `ob_size`.\n\n**Immutability vs Mutability**:\n- **Immutable (tuples, strings, ints)**: Memory allocated contiguously once. Modifying requires allocating a completely new object in memory.\n- **Mutable (lists, dicts)**: The struct holds a pointer to a dynamically resizable array of `PyObject*` pointers.",
+                        codeSnippet = """
+# Low-level memory identity check
+a = (1, 2)
+b = (1, 2)
+print(a is b)  # False: Distinct heap allocations
 
-        if (lessonId.contains("appsec")) {
-            return listOf(
-                Question(
-                    id = "q_sec_1",
-                    lessonId = lessonId,
-                    prompt = "Which HTTP header is essential to prevent Clickjacking attacks by controlling iframe embedding?",
-                    type = QuestionType.MULTIPLE_CHOICE,
-                    options = listOf("Content-Security-Policy", "X-Frame-Options", "Strict-Transport-Security", "Access-Control-Allow-Origin"),
-                    correctAnswerHash = "e96dd899cb6337a7fe69ffaa1a629fb81c4e7ab21e25e9c0c80b62d169bf8843", // "x-frame-options"
-                    explanationHint = "X-Frame-Options: DENY or SAMEORIGIN instructs modern browsers to forbid framing."
-                ),
-                Question(
-                    id = "q_sec_2",
-                    lessonId = lessonId,
-                    prompt = "A client-side stored authentication token is vulnerable to XSS theft if stored in localStorage.",
-                    type = QuestionType.TRUE_FALSE,
-                    options = listOf("True", "False"),
-                    correctAnswerHash = "b326b5062b2f0e69046810717534cb0964a427b6c720284f0c1512e4b49e9817", // "true"
-                    explanationHint = "JavaScript executing via XSS has unconstrained read access to window.localStorage. Use HttpOnly cookies instead."
-                ),
-                Question(
-                    id = "q_sec_3",
-                    lessonId = lessonId,
-                    prompt = "Reorder the defensive layers for a secure microservice authentication flow:",
-                    type = QuestionType.CODE_SCRAMBLE,
-                    options = emptyList(),
-                    correctAnswerHash = "b4aa1e01fb342b5ba348c5e0da994c9f1361c471c356976ce733a469a91a92e1", // combined tokens
-                    scrambleTokens = listOf(
-                        "1. TLS 1.3 Termination",
-                        "2. Cloudflare Edge WAF Rate Limiting",
-                        "3. Cryptographic JWT Signature Check",
-                        "4. RBAC Principle of Least Privilege"
+# Small integer interning (-5 to 256)
+x = 100
+y = 100
+print(x is y)  # True: CPython pre-allocates an array of small PyLongObject singletons
+                        """.trimIndent(),
+                        keyTakeaway = "Tuples are immutable contiguous arrays. Mutating strings or tuples in loops causes O(N^2) allocations."
                     ),
-                    explanationHint = "Edge termination filters volumetric noise before verifying signatures and authorizing roles."
-                )
-            )
-        } else if (lessonId.contains("agentic")) {
-            return listOf(
-                Question(
-                    id = "q_ai_1",
-                    lessonId = lessonId,
-                    prompt = "In an autonomous agent architecture, what mechanism enables the LLM to interact with external databases and APIs?",
-                    type = QuestionType.MULTIPLE_CHOICE,
-                    options = listOf("Prompt Engineering", "Tool Calling / Function Calling", "Temperature Tuning", "Vector Indexing"),
-                    correctAnswerHash = "68da4013146d6b1399859f5b61b369ba6a4a2f8bdf9b2fe8e9ee2aa102c98e24", // "tool calling / function calling"
-                    explanationHint = "Tool calling provides schema declarations that models populate to execute client-side functions."
+                    ConceptStep(
+                        stepNumber = 3,
+                        title = "Step 3: The PyMalloc Hierarchical Allocator",
+                        summary = "Custom allocator optimized for small allocations (<= 512 bytes) to bypass kernel malloc syscalls.",
+                        detailedExplanation = "Calling system `malloc()` for every small object creates massive OS context switch overhead and memory fragmentation. CPython implements **PyMalloc** for objects <= 512 bytes:\n\n- **Arenas (256 KB)**: Slices of memory obtained from the OS.\n- **Pools (4 KB)**: Subdivisions of arenas sized to match system virtual memory pages. Each pool holds blocks of a single uniform size class (multiples of 8 or 16 bytes).\n- **Blocks (8B to 512B)**: Discrete chunks where actual `PyObject` payloads reside.\n\nObjects larger than 512 bytes bypass PyMalloc and call standard system `malloc()` directly.",
+                        architecturalDiagram = "OS Heap -> Arena (256KB) -> Pool (4KB, Page Size) -> Block (<= 512B Uniform Size Class)",
+                        keyTakeaway = "PyMalloc eliminates OS kernel syscall overhead for high-frequency small object allocations."
+                    )
                 ),
-                Question(
-                    id = "q_ai_2",
-                    lessonId = lessonId,
-                    prompt = "To prevent infinite execution loops in autonomous agents, an orchestrator must enforce a maximum recursion depth.",
-                    type = QuestionType.TRUE_FALSE,
-                    options = listOf("True", "False"),
-                    correctAnswerHash = "b326b5062b2f0e69046810717534cb0964a427b6c720284f0c1512e4b49e9817", // "true"
-                    explanationHint = "Max turns/iterations guard against non-terminating tool loops and resource exhaustion."
-                ),
-                Question(
-                    id = "q_ai_3",
-                    lessonId = lessonId,
-                    prompt = "Arrange the multi-agent cognitive loop in the correct operational sequence:",
-                    type = QuestionType.CODE_SCRAMBLE,
-                    options = emptyList(),
-                    correctAnswerHash = "5fe5518b6c43e49e29a972688009770514feecfbeeb74ff0df6b88ca9e23c72b",
-                    scrambleTokens = listOf(
-                        "1. User Query & Memory Ingestion",
-                        "2. Chain-of-Thought Reasoning & Plan",
-                        "3. Tool Call Proposal & Sandbox Execution",
-                        "4. Observation Evaluation & Final Response"
+                mcqs = listOf(
+                    Question(
+                        id = "py_mcq_1",
+                        lessonId = lessonId,
+                        prompt = "Which CPython memory allocator hierarchy handles small objects of size <= 512 bytes?",
+                        options = listOf("PyMalloc", "Jemalloc", "Glibc Malloc", "TCMalloc"),
+                        correctAnswerHash = "7f7f02b1154c1fbc9c0953a6a125740fc5040e34b9d09c6ebfa9b7ce2b800ca8",
+                        correctOptionIndex = 0,
+                        explanationHint = "PyMalloc manages Arenas (256KB) and Pools (4KB) specifically for fast micro-allocations.",
+                        distractorRationale = mapOf(
+                            1 to "Jemalloc is used by Rust and FreeBSD, but is not Python's default small-object allocator.",
+                            2 to "Glibc Malloc is the standard OS allocator used only for objects > 512 bytes.",
+                            3 to "TCMalloc is Google's thread-caching allocator, not built into upstream CPython."
+                        ),
+                        difficulty = "Medium",
+                        companyTag = "Google"
                     ),
-                    explanationHint = "Perceive -> Reason -> Act -> Observe is the foundational ReAct loop."
+                    Question(
+                        id = "py_mcq_2",
+                        lessonId = lessonId,
+                        prompt = "Why does string concatenation in a loop (e.g. `s += char`) exhibit O(N^2) time complexity?",
+                        options = listOf(
+                            "Strings are immutable, requiring allocating a new buffer and copying all preceding characters on every turn",
+                            "The GIL locks execution on every string byte access",
+                            "Python hashes every string before each concatenation",
+                            "CPython VM garbage collector runs synchronously after every operator call"
+                        ),
+                        correctAnswerHash = "e9ec9562725514f7724a73752e50cf6ef0d892015fa1d5982e56cb6e3f225028",
+                        correctOptionIndex = 0,
+                        explanationHint = "Strings are PyASCIIObject/PyCompactUnicode immutable buffers. Changing them requires reallocating and copying preceding characters.",
+                        difficulty = "Senior",
+                        companyTag = "Meta"
+                    )
+                ),
+                interviewQuestions = listOf(
+                    InterviewQuestion(
+                        id = "py_iq_1",
+                        lessonId = lessonId,
+                        title = "Reverse a Singly Linked List: Iterative vs Recursive Stack Analysis",
+                        targetCompany = "Meta / Google",
+                        roleLevel = "Senior Software Engineer (L5-L6)",
+                        problemStatement = "Given the head of a singly linked list, reverse the list in-place and return its new head. Analyze the low-level stack frame implications of both iterative and recursive implementations in a managed runtime.",
+                        timeEstimateMinutes = 15,
+                        keyTalkingPoints = listOf(
+                            "Iterative 3-pointer manipulation (prev, curr, next_node) achieves O(1) auxiliary space.",
+                            "In-place pointer reversal avoids heap allocations and preserves object IDs.",
+                            "Recursive traversal incurs O(N) auxiliary space on the call stack due to PyFrameObject allocation.",
+                            "Risk of RecursionError when exceeding sys.getrecursionlimit() (default 1000)."
+                        ),
+                        modelAnswer = """
+### Architectural Approach & Tradeoffs
+
+1. **Iterative In-Place Reversal (Optimal)**:
+   - We maintain three reference pointers: `prev` (None), `curr` (head), and `next_node` (temporary).
+   - In each iteration, we store `curr.next` in `next_node`, reverse `curr.next = prev`, and advance `prev` and `curr`.
+   - **Complexity**: O(N) time, O(1) space. Zero heap reallocations.
+
+2. **Recursive Traversal (Stack-Heavy)**:
+   - Recursively reaches the tail: `new_head = reverse(head.next)`.
+   - On the return cascade: `head.next.next = head` and `head.next = None`.
+   - **Complexity**: O(N) time, but O(N) auxiliary stack space. In CPython, each call pushes a complete `PyFrameObject` containing local namespaces and evaluation stack. If N > 1000, Python raises a `RecursionError`.
+
+### Production Conclusion:
+Always deploy the iterative 3-pointer solution in production systems to guarantee O(1) memory stability and eliminate stack-overflow vulnerability.
+                        """.trimIndent(),
+                        codeSolution = """
+class ListNode:
+    def __init__(self, val=0, next=None):
+        self.val = val
+        self.next = next
+
+def reverse_list_iterative(head: ListNode) -> ListNode:
+    prev = None
+    curr = head
+    while curr:
+        next_node = curr.next
+        curr.next = prev
+        prev = curr
+        curr = next_node
+    return prev
+                        """.trimIndent(),
+                        followUpQuestions = listOf(
+                            "How would you reverse a sub-portion of the linked list between positions m and n in a single pass?",
+                            "How does Python's garbage collector handle circular references if a linked list node points back to an earlier ancestor?"
+                        )
+                    ),
+                    InterviewQuestion(
+                        id = "py_iq_2",
+                        lessonId = lessonId,
+                        title = "Explain PyMalloc Allocator and Memory Fragmentation",
+                        targetCompany = "Google / Uber",
+                        roleLevel = "Staff Systems Engineer (L6)",
+                        problemStatement = "A high-throughput backend service processes millions of small JSON dictionaries per minute. Profiling reveals high resident memory (RSS) that never returns to the operating system even after processing finishes. Explain why this happens under CPython's PyMalloc and how you mitigate it.",
+                        timeEstimateMinutes = 20,
+                        keyTalkingPoints = listOf(
+                            "PyMalloc manages memory in 256KB Arenas, 4KB Pools, and <= 512B Blocks.",
+                            "An Arena can only be released back to the OS via free() if EVERY SINGLE POOL inside it is completely empty.",
+                            "A single surviving 32-byte object in an Arena pins the entire 256KB arena in RSS.",
+                            "Mitigation: multiprocessing pool termination, batch chunking, or custom allocators (Jemalloc via LD_PRELOAD)."
+                        ),
+                        modelAnswer = """
+### Root Cause: PyMalloc Arena Pinning & OS Fragmentation
+
+1. **Arena Release Constraint**:
+   - CPython allocates memory in 256KB Arenas. An Arena is only surrendered to the OS via `free()` when **all 64 Pools (4KB each) within it are 100% unoccupied**.
+   - If a long-lived object (such as a cached session token or global registry entry) resides in a pool, that single 64-byte allocation prevents the entire 256KB arena from returning to the OS.
+
+2. **Remediation Engineering**:
+   - **Worker Recycling**: Use Gunicorn/Uvicorn `--max-requests 5000` to periodically recycle OS worker processes, returning pinned RSS to the host.
+   - **Subprocess Isolation**: Offload heavy JSON parsing batches to `multiprocessing.Pool` workers that terminate upon task completion.
+   - **System Allocator Swap**: Preload **Jemalloc** (`LD_PRELOAD=/usr/lib/libjemalloc.so`) which provides superior aggressive background arena purging compared to standard glibc.
+                        """.trimIndent(),
+                        followUpQuestions = listOf(
+                            "What is the difference between generational garbage collection (gc module) and reference counting in this scenario?",
+                            "How does Python 3.12+ immortal objects PEP 683 impact multi-process copy-on-write memory sharing?"
+                        )
+                    )
                 )
             )
         } else {
-            // Default Python / Core questions
-            return listOf(
-                Question(
-                    id = "q_py_1",
-                    lessonId = lessonId,
-                    prompt = "Which standard data type in Python is strictly IMMUTABLE once instantiated?",
-                    type = QuestionType.MULTIPLE_CHOICE,
-                    options = listOf("List", "Dictionary", "Tuple", "Set"),
-                    correctAnswerHash = "fb2c3dcbe52aa287c413879a8d1b4564c5058391ae4d64f361b5b0caae9397ca", // "tuple"
-                    explanationHint = "Tuples maintain fixed contiguous memory allocations and cannot be resized or mutated in-place."
+            // Agentic AI Track
+            return TopicContent(
+                lessonId = lessonId,
+                title = "The Agentic Mindset, Autonomous Loops & Guardrails",
+                overview = "A masterclass on architecting production AI agents: distinguishing casual chatbot prompting from deterministic perception-action loops, tool calling schemas, and recursion depth guardrails.",
+                conceptSteps = listOf(
+                    ConceptStep(
+                        stepNumber = 1,
+                        title = "Step 1: Casual Chatbot Prompting vs. Agentic Engineering",
+                        summary = "Why static forward-pass completions are obsolete compared to autonomous tool-using agents.",
+                        detailedExplanation = "Non-Agentic AI takes a prompt and produces a single response without verification. In contrast, an **Agentic System** possesses:\n\n1. **Agency**: Autonomously proposes and invokes external tools (APIs, Shell commands, databases).\n2. **Observation**: Ingests tool execution results, parsing standard output and compiler errors.\n3. **Self-Correction**: Reasons about test failures and iteratively edits code until the goal is achieved.",
+                        architecturalDiagram = "Human Goal -> Agent (Reason) -> Tool Call (Act) -> Sandbox Execution (Observe) -> Self-Correction Loop",
+                        keyTakeaway = "An agentic engineer treats the LLM as a high-speed reasoning engine integrated with deterministic tools and automated feedback loops."
+                    ),
+                    ConceptStep(
+                        stepNumber = 2,
+                        title = "Step 2: The ReAct Operational Loop",
+                        summary = "Perceive -> Reason -> Act -> Observe execution cycle.",
+                        detailedExplanation = "In the ReAct pattern:\n\n- **Thought**: The model generates internal chain-of-thought planning.\n- **Action**: The model outputs a structured tool call JSON matching an exact schema.\n- **Observation**: The system executes the tool in a sandbox and returns the stdout/stderr into the context window as high-priority feedback.",
+                        keyTakeaway = "Tool schemas must declare strict required parameters and clear error responses so the model can recover gracefully."
+                    )
                 ),
-                Question(
-                    id = "q_py_2",
-                    lessonId = lessonId,
-                    prompt = "In CPython, what custom hierarchical memory allocator handles allocations for objects <= 512 bytes?",
-                    type = QuestionType.MULTIPLE_CHOICE,
-                    options = listOf("Jemalloc", "PyMalloc", "TCMalloc", "Glibc Malloc"),
-                    correctAnswerHash = "7f7f02b1154c1fbc9c0953a6a125740fc5040e34b9d09c6ebfa9b7ce2b800ca8", // "pymalloc"
-                    explanationHint = "PyMalloc manages Arenas (256KB), Pools (4KB), and Blocks for rapid small-object lifecycles."
+                mcqs = listOf(
+                    Question(
+                        id = "ai_mcq_1",
+                        lessonId = lessonId,
+                        prompt = "What guardrail is mandatory to prevent an autonomous coding agent from running in an infinite non-terminating loop?",
+                        options = listOf("Maximum recursion depth / iteration limit", "Increasing LLM temperature", "Removing tool calling definitions", "Using streaming responses"),
+                        correctAnswerHash = "b98dafa8f21e5f3bbd18f51950e932944cae97a51c4a04d3e5a528e1c66779ee",
+                        correctOptionIndex = 0,
+                        explanationHint = "Enforcing a hard turn limit (e.g. max 25 iterations) stops runaway resource exhaustion.",
+                        difficulty = "Medium",
+                        companyTag = "Anthropic"
+                    )
                 ),
-                Question(
-                    id = "q_py_3",
-                    lessonId = lessonId,
-                    prompt = "Python's Global Interpreter Lock (GIL) prevents multi-threaded CPU bound tasks from executing in true parallel across multiple cores.",
-                    type = QuestionType.TRUE_FALSE,
-                    options = listOf("True", "False"),
-                    correctAnswerHash = "b326b5062b2f0e69046810717534cb0964a427b6c720284f0c1512e4b49e9817", // "true"
-                    explanationHint = "The GIL serializes bytecode execution within a single OS process. Use multiprocessing for CPU concurrency."
+                interviewQuestions = listOf(
+                    InterviewQuestion(
+                        id = "ai_iq_1",
+                        lessonId = lessonId,
+                        title = "Design a Resilient Tool-Calling Multi-Agent Orchestrator",
+                        targetCompany = "Google DeepMind / OpenAI",
+                        roleLevel = "Staff AI Systems Architect",
+                        problemStatement = "Design an autonomous agent system that can diagnose and patch bugs in a distributed microservice codebase. How do you prevent hallucinations, ensure reproducible sandboxing, and prevent catastrophic regressions?",
+                        timeEstimateMinutes = 20,
+                        keyTalkingPoints = listOf(
+                            "Decouple Planner/Architect subagent from Worker/Coder subagents.",
+                            "Enforce ephemeral containerized sandboxes (Docker / gVisor) for all tool execution.",
+                            "Automated verification loop: compile, run unit tests, and check lints before human review.",
+                            "Stateful graph orchestration with checkpoints for backtracking upon failed approaches."
+                        ),
+                        modelAnswer = """
+### System Design Blueprint:
+
+1. **Subagent Specialization**:
+   - **Research Agent**: Read-only tools (grep, AST inspection, log parsing).
+   - **Coder Agent**: Focused diff application.
+   - **Verification Agent**: Test suite runner with zero git commit privileges.
+
+2. **Deterministic Sandbox Boundary**:
+   - Tools execute inside ephemeral microVMs (e.g. Firecracker or Docker).
+   - Network egress is restricted to internal dependencies to prevent data exfiltration.
+
+3. **Self-Correction & Backtracking**:
+   - Maintain a directed acyclic state graph (DAG). If a proposed code edit breaks regression tests, the orchestrator rolls back the working tree and instructs the planner to formulate an alternative hypothesis.
+                        """.trimIndent(),
+                        followUpQuestions = listOf(
+                            "How do you handle context window degradation as tool observations accumulate over long trajectories?",
+                            "How do you secure LLM tool calling against indirect prompt injection embedded in external web search results?"
+                        )
+                    )
                 )
             )
         }
