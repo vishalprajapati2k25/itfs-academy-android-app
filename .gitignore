@@ -1,0 +1,16 @@
+*.iml
+.gradle
+/local.properties
+/.idea/
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+
+# Android Binary Build Artifacts (Decoupled from Git tree - Play Store Zero-Binary Rule)
+*.apk
+*.aab
+*.idsig
+*.jks
+*.keystore

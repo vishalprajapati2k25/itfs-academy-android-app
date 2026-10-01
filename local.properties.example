@@ -1,0 +1,12 @@
+## This file is used to configure project-specific settings.
+# Location of the Android SDK:
+# On Linux: sdk.dir=/home/username/Android/Sdk
+# On macOS: sdk.dir=/Users/username/Library/Android/sdk
+# On Windows: sdk.dir=C:\\Users\\username\\AppData\\Local\\Android\\Sdk
+sdk.dir=/home/username/Android/Sdk
+
+# Optional: Play Store Release Signing Credentials (for release builds)
+# KEYSTORE_FILE=release.jks
+# KEYSTORE_PASSWORD=YourStorePassword
+# KEY_ALIAS=itfsacademy_release
+# KEY_PASSWORD=YourKeyPassword
