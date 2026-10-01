@@ -1,40 +1,48 @@
-# ITFS Academy — Release Distribution & Checksums
+# 🚀 ITFS Academy - Production Release Information
 
-This directory documents the official production binaries hosted via **GitHub Releases CDN**, complying with our organization's **Zero-Binary Git Standard**.
-
----
-
-## 📦 Zero-Binary Architecture Notice
-
-In compliance with Google Play Console policies and Git performance best practices:
-- **Compiled `.apk` and `.aab` binaries are NOT committed into this Git repository.**
-- All binaries are cryptographically signed and hosted directly on **GitHub Releases CDN**.
+Official release documentation for **ITFS Academy**.
 
 ---
 
-## ⬇️ Official Downloads
+## 📥 Official Release Downloads (Hosted via GitHub Releases CDN)
 
-| Artifact | Version | File Format | Download Link | Purpose |
-|:---|:---:|:---:|:---|:---|
-| **Debug APK** | `v1.0.0` (Code 1) | `.apk` | [⬇️ Download Debug APK](https://github.com/vishalprajapati2k25/itfs-academy-android-app/releases/download/v1.0.0/ITFSAcademy-v1.0.0-debug.apk) | Direct testing & developer emulation |
-| **Play Store AAB** | `v1.0.0` (Code 1) | `.aab` | [⬇️ Download Play Store AAB](https://github.com/vishalprajapati2k25/itfs-academy-android-app/releases/download/v1.0.0/ITFSAcademy-v1.0.0-release.aab) | Google Play Console production/closed testing |
+In accordance with modern software release standards, compiled binaries (`.apk`, `.aab`) are hosted on **GitHub Releases** rather than tracked inside the Git repository tree, preventing repository bloat while guaranteeing high-speed downloads:
+
+| File | Type | Size | Official Direct Download Link | Description |
+| :--- | :--- | :---: | :--- | :--- |
+| **`ITFSAcademy-v1.0.0-release.apk`** | Signed APK | 14.6 MB | [⬇️ **Download APK**](https://github.com/vishalprajapati2k25/itfs-academy-android-app/releases/download/v1.0.0/ITFSAcademy-v1.0.0-release.apk) | Standalone signed APK for direct installation, QA testing, and Appium automation. |
+| **`ITFSAcademy-v1.0.0-release.aab`** | Production AAB | 17.9 MB | [⬇️ **Download AAB**](https://github.com/vishalprajapati2k25/itfs-academy-android-app/releases/download/v1.0.0/ITFSAcademy-v1.0.0-release.aab) | Google Play Store publication bundle (Android 15 / API 35 compliant). |
+
+> 🏷️ **GitHub Release Tag**: [`v1.0.0`](https://github.com/vishalprajapati2k25/itfs-academy-android-app/releases/tag/v1.0.0)
 
 ---
 
-## 🔐 Cryptographic Integrity & Anti-Tamper
+## 🔐 Cryptographic Integrity & Checksums
 
-Before installing, you may verify SHA-256 integrity:
+| File | SHA-256 Checksum |
+| :--- | :--- |
+| `ITFSAcademy-v1.0.0-release.apk` | `81d49b44f0240a4b85bddc7932853812f80c57be733dad53f8b810a6c661ae3a` |
+| `ITFSAcademy-v1.0.0-release.aab` | `77f3cf259d226350b63d545f0cae3629dd591980774fef2009702536a7012fc3` |
 
+---
+
+## 📋 Release Metadata
+
+* **Version Name**: `1.0.0`
+* **Version Code**: `1`
+* **Target SDK**: `API 35` (Android 15)
+* **Privacy Policy URL**: [https://academy.itfreesource.com/apps/itfs-academy/privacy.html](https://academy.itfreesource.com/apps/itfs-academy/privacy.html)
+
+---
+
+## 📲 Installation Instructions
+
+### Via ADB
 ```bash
-sha256sum ITFSAcademy-v1.0.0-debug.apk
+adb install -r ITFSAcademy-v1.0.0-release.apk
 ```
 
----
-
-## 📲 Sideloading via ADB
-
-To install directly to a connected Android phone or emulator:
-
-```bash
-adb install -r app/build/outputs/apk/debug/app-debug.apk
-```
+### Direct Sideload on Android
+1. Open the [APK Download Link](https://github.com/vishalprajapati2k25/itfs-academy-android-app/releases/download/v1.0.0/ITFSAcademy-v1.0.0-release.apk) on your Android device.
+2. Allow "Install unknown apps" if prompted.
+3. Tap **Install** and launch **ITFS Academy**.
