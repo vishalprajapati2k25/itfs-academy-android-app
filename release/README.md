@@ -10,7 +10,8 @@ In accordance with modern software release standards, compiled binaries (`.apk`,
 
 | File | Type | Size | Official Direct Download Link | Description |
 | :--- | :--- | :---: | :--- | :--- |
-| **`ITFSAcademy-v1.0.0-release.apk`** | Signed APK | 2.2 MB | [⬇️ **Download APK**](https://github.com/vishalprajapati2k25/itfs-academy-android-app/releases/download/v1.0.0/ITFSAcademy-v1.0.0-release.apk) | Standalone signed APK for direct installation, QA testing, and Appium automation. |
+| **`ITFSAcademy-v1.0.0-release.apk`** | Signed Release APK | 2.2 MB | [⬇️ **Download Release APK**](https://github.com/vishalprajapati2k25/itfs-academy-android-app/releases/download/v1.0.0/ITFSAcademy-v1.0.0-release.apk) | Standalone signed & R8-minified APK for production testing & sideloading. |
+| **`ITFSAcademy-v1.0.0-debug.apk`** | Debug Signed APK | 14.8 MB | [⬇️ **Download Debug APK**](https://github.com/vishalprajapati2k25/itfs-academy-android-app/releases/download/v1.0.0/ITFSAcademy-v1.0.0-debug.apk) | Debug-signed APK with Logcat diagnostics enabled. |
 | **`ITFSAcademy-v1.0.0-release.aab`** | Production AAB | 4.1 MB | [⬇️ **Download AAB**](https://github.com/vishalprajapati2k25/itfs-academy-android-app/releases/download/v1.0.0/ITFSAcademy-v1.0.0-release.aab) | Google Play Store publication bundle (Android 15 / API 35 compliant). |
 
 > 🏷️ **GitHub Release Tag**: [`v1.0.0`](https://github.com/vishalprajapati2k25/itfs-academy-android-app/releases/tag/v1.0.0)
@@ -21,7 +22,8 @@ In accordance with modern software release standards, compiled binaries (`.apk`,
 
 | File | SHA-256 Checksum |
 | :--- | :--- |
-| `ITFSAcademy-v1.0.0-release.apk` | `9e56ed4e81f54c00ffabc4d68912fc2e525645d94167b6d54a8f106eb27fd250` |
+| `ITFSAcademy-v1.0.0-release.apk` | `531fee6e0120b1cfc523b30e7adfd0b77faaa9070467d8b194937c58f49feb71` |
+| `ITFSAcademy-v1.0.0-debug.apk` | `fe344da00849372c665e3184eaf644b11a0310a4872c4a46110b2de36061e166` |
 | `ITFSAcademy-v1.0.0-release.aab` | `5e63b393dbd5b6c5a38d8b8df1f5f30d2e7d1f3f52b8ded693461426cba502c9` |
 
 ---
