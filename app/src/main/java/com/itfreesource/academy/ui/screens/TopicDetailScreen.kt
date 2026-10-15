@@ -54,6 +54,7 @@ fun TopicDetailScreen(
                     .fillMaxWidth()
                     .background(if (isLight) SlateCardBg else ObsidianCardBg)
                     .border(1.dp, if (isLight) SlateBorder else ObsidianBorder)
+                    .statusBarsPadding()
             ) {
                 // Navigation Bar
                 Row(
@@ -116,6 +117,7 @@ fun TopicDetailScreen(
             modifier = modifier
                 .fillMaxSize()
                 .padding(paddingVals)
+                .navigationBarsPadding()
                 .background(if (isLight) SlateLightBg else ObsidianDarkBg)
         ) {
             when (selectedTab) {

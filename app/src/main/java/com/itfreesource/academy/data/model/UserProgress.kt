@@ -10,9 +10,14 @@ data class UserProgress(
     val longAnswersReviewedCount: Int = 19,
     val streakDays: Int = 5,
     val totalStudyMinutes: Int = 320,
-    val activeCourseId: String = "agentic-engineering",
+    val activeCourseId: String = "sdet",
+    val lastActiveLessonId: String? = "sdet_playwright_l1",
+    val lastActiveLessonTitle: String = "Playwright Network Mocking & Custom Fixtures",
+    val lastActiveStreamTitle: String = "SDET & Automation",
+    val lastActiveSubTopicTitle: String = "Playwright E2E Mastery",
+    val lastActiveStepNumber: Int = 2,
     val bookmarkedQuestionIds: Set<String> = emptySet(),
-    val completedLessonIds: Set<String> = setOf("agentic-engineering_l1")
+    val completedLessonIds: Set<String> = setOf("sdet_playwright_l1")
 )
 
 data class TrackSummary(

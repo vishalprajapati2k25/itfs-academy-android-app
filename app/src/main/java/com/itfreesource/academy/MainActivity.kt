@@ -49,7 +49,12 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             ITFSAcademyTheme(darkTheme = true) {
-                MainAppHost(repository = repository)
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colors.background
+                ) {
+                    MainAppHost(repository = repository)
+                }
             }
         }
     }
@@ -61,6 +66,8 @@ fun MainAppHost(repository: AcademyRepository) {
     val isLight = MaterialTheme.colors.isLight
 
     val userProgress by repository.userProgress.collectAsState()
+    val careerStreams by repository.careerStreams.collectAsState()
+    val selectedStream by repository.selectedStream.collectAsState()
     val courses by repository.courses.collectAsState()
     val curriculum by repository.curriculum.collectAsState()
 
@@ -96,8 +103,8 @@ fun MainAppHost(repository: AcademyRepository) {
         topBar = {
             AppTopBar(
                 progress = userProgress,
-                currentCourseTitle = currentCourse?.title ?: "Select Track",
-                currentCourseEmoji = currentCourse?.iconEmoji ?: "🎓",
+                currentCourseTitle = selectedStream?.title ?: (currentCourse?.title ?: "Career Streams"),
+                currentCourseEmoji = selectedStream?.iconEmoji ?: (currentCourse?.iconEmoji ?: "🎯"),
                 onCourseClick = { currentTab = MainTab.TRACKS },
                 onSecurityClick = { showSecurityAudit = true }
             )
@@ -105,7 +112,8 @@ fun MainAppHost(repository: AcademyRepository) {
         bottomBar = {
             BottomNavigation(
                 backgroundColor = if (isLight) SlateCardBg else ObsidianCardBg,
-                elevation = 8.dp
+                elevation = 8.dp,
+                modifier = Modifier.navigationBarsPadding()
             ) {
                 MainTab.values().forEach { tab ->
                     val selected = currentTab == tab
@@ -124,18 +132,49 @@ fun MainAppHost(repository: AcademyRepository) {
         Box(modifier = Modifier.padding(paddingVals)) {
             when (currentTab) {
                 MainTab.LEARN -> LearnScreen(
-                    currentCourse = currentCourse,
-                    curriculum = curriculum,
+                    careerStreams = careerStreams,
+                    selectedStream = selectedStream,
                     progress = userProgress,
-                    onOpenTopic = { lesson ->
+                    onSelectStream = { stream ->
+                        repository.selectCareerStream(stream)
+                    },
+                    onBackToStreams = {
+                        repository.selectCareerStream(null)
+                    },
+                    onOpenSubTopic = { subTopic ->
                         scope.launch {
-                            val content = repository.loadTopicContent(lesson.id)
-                            activeTopicLesson = lesson
+                            val content = repository.loadTopicContent(subTopic.lessonId)
+                            activeTopicLesson = LessonNode(
+                                id = subTopic.lessonId,
+                                sectionId = "${subTopic.streamId}_sec_1",
+                                title = subTopic.title,
+                                subtitle = subTopic.description,
+                                order = 1,
+                                estMinutes = subTopic.estMinutes,
+                                difficulty = subTopic.targetRole,
+                                interviewTopicsCount = subTopic.faangQuestionsCount,
+                                mcqCount = subTopic.mcqCount
+                            )
                             activeTopicContent = content
                         }
                     },
-                    onOpenCatalog = {
-                        currentTab = MainTab.TRACKS
+                    onResumeLearning = {
+                        val lessonId = userProgress.lastActiveLessonId ?: "sdet_playwright_l1"
+                        scope.launch {
+                            val content = repository.loadTopicContent(lessonId)
+                            activeTopicLesson = LessonNode(
+                                id = lessonId,
+                                sectionId = "active_sec_1",
+                                title = userProgress.lastActiveLessonTitle,
+                                subtitle = userProgress.lastActiveSubTopicTitle,
+                                order = 1,
+                                estMinutes = 15,
+                                difficulty = "Senior",
+                                interviewTopicsCount = 2,
+                                mcqCount = 3
+                            )
+                            activeTopicContent = content
+                        }
                     }
                 )
                 MainTab.INTERVIEW -> InterviewPrepScreen(
@@ -151,6 +190,8 @@ fun MainAppHost(repository: AcademyRepository) {
                     },
                     onSelectActiveCourse = { courseId ->
                         repository.selectCourse(courseId)
+                        val stream = careerStreams.find { it.id == courseId }
+                        repository.selectCareerStream(stream)
                         currentTab = MainTab.LEARN
                     }
                 )

@@ -22,9 +22,9 @@ In accordance with modern software release standards, compiled binaries (`.apk`,
 
 | File | SHA-256 Checksum |
 | :--- | :--- |
-| `ITFSAcademy-v1.0.0-release.apk` | `531fee6e0120b1cfc523b30e7adfd0b77faaa9070467d8b194937c58f49feb71` |
-| `ITFSAcademy-v1.0.0-debug.apk` | `fe344da00849372c665e3184eaf644b11a0310a4872c4a46110b2de36061e166` |
-| `ITFSAcademy-v1.0.0-release.aab` | `5e63b393dbd5b6c5a38d8b8df1f5f30d2e7d1f3f52b8ded693461426cba502c9` |
+| `ITFSAcademy-v1.0.0-release.apk` | `5777e1b8b6f0f5dbcceea59278ada76d20cf4cfe7ff89265ae202289f72f8bc9` |
+| `ITFSAcademy-v1.0.0-debug.apk` | `811e9caf68d72b343a7373fe9307edf3ee9d1eec1a5ebe7a01e75ecce5526a29` |
+| `ITFSAcademy-v1.0.0-release.aab` | `ceb1c6737245408b7d9e62bd3e2113dd0ffe4cb6a31acc5735a3fb569cc9dc4a` |
 
 ---
 

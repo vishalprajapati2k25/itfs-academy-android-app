@@ -54,6 +54,13 @@ Engineered from the ground up to prepare developers for senior/staff interviews 
 ## 🎨 Developer-Centric Obsidian Dark UI
 
 - **Obsidian Dark Palette**: `#0B0F17` background with `#111827` card elevations, Indigo `#6366F1` accents, and Emerald `#10B981` indicators.
+- **Android 15 Edge-to-Edge Shield**: Precision window insets (`statusBarsPadding()`, `navigationBarsPadding()`) safeguarding the UI from clipping into phone status bar icons, carrier labels, punch-hole notches, and system gesture bars.
+- **Career Stream Architecture**: Direct landing tiles for 4 high-demand engineering streams:
+  - 🛠️ **SDET**: Playwright Modern E2E, Selenium WebDriver, LLM & Agentic AI Testing, LeetCode SDET Coding, and Algorithmic PseudoCodes.
+  - ⚡ **Developer**: CPython Bytecode & GIL Internals, AsyncIO Event Loops, High-Concurrency Web Architecture.
+  - 🛡️ **Security**: OWASP Top 10 API Security, Token Invalidation, Cryptographic Signing, Zero-Trust Architecture.
+  - 💻 **Programming**: Low-Level Memory Management, Data Structures, Cache Optimization, System Design.
+- **Resume Learning Hero Card**: Context-aware persistent card dynamically showing the exact topic, stream, and step number where the candidate left off with 1-tap instant continuation.
 - **Interview Readiness Telemetry**: Real-time readiness score (%) calculated from concepts completed, MCQs solved, and long-answer questions reviewed.
 - **Company & Role Badging**: Instant filtering by target employer (`Google`, `Meta`, `Amazon`, `Uber`, `Netflix`) and level (`L5 Senior`, `L6 Staff`).
 - **Interactive Security Shield**: Real-time dialog displaying active DRM protections, tamper check status, and live Edge API connectivity latency.
