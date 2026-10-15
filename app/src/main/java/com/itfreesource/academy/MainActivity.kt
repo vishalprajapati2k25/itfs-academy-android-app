@@ -10,6 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.BusinessCenter
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.ViewCarousel
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -28,8 +29,9 @@ import kotlinx.coroutines.launch
 
 enum class MainTab(val title: String, val icon: ImageVector) {
     LEARN("Learn", Icons.AutoMirrored.Filled.MenuBook),
+    MY_COURSES("My Courses", Icons.Default.School),
     INTERVIEW("Interview", Icons.Default.BusinessCenter),
-    TRACKS("Tracks", Icons.Default.ViewCarousel),
+    TRACKS("Catalog", Icons.Default.ViewCarousel),
     PROFILE("Readiness", Icons.Default.Person)
 }
 
@@ -175,6 +177,32 @@ fun MainAppHost(repository: AcademyRepository) {
                             )
                             activeTopicContent = content
                         }
+                    },
+                    onToggleEnrollStream = { streamId ->
+                        repository.toggleCareerStreamEnrollment(streamId)
+                    }
+                )
+                MainTab.MY_COURSES -> MyCoursesScreen(
+                    enrolledStreams = careerStreams.filter { it.id in userProgress.enrolledStreamIds },
+                    enrolledCourses = courses.filter { it.isSubscribed || it.id in userProgress.enrolledCourseIds },
+                    progress = userProgress,
+                    onContinueStream = { stream ->
+                        repository.selectCareerStream(stream)
+                        currentTab = MainTab.LEARN
+                    },
+                    onContinueCourse = { course ->
+                        repository.selectCourse(course.id)
+                        val stream = careerStreams.find { it.id == course.id }
+                        if (stream != null) {
+                            repository.selectCareerStream(stream)
+                        }
+                        currentTab = MainTab.LEARN
+                    },
+                    onUnenrollStream = { streamId ->
+                        repository.toggleCareerStreamEnrollment(streamId)
+                    },
+                    onExploreCatalog = {
+                        currentTab = MainTab.TRACKS
                     }
                 )
                 MainTab.INTERVIEW -> InterviewPrepScreen(

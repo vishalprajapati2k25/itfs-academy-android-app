@@ -11,6 +11,8 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -37,6 +39,7 @@ fun LearnScreen(
     onBackToStreams: () -> Unit,
     onOpenSubTopic: (StreamSubTopic) -> Unit,
     onResumeLearning: () -> Unit,
+    onToggleEnrollStream: (String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val isLight = MaterialTheme.colors.isLight
@@ -136,6 +139,34 @@ fun LearnScreen(
                             BadgePill(text = "📚 ${selectedStream.modulesCount} Modules")
                             BadgePill(text = "💼 ${selectedStream.faangQuestionsCount} FAANG Qs")
                         }
+
+                        Spacer(modifier = Modifier.height(14.dp))
+                        val isEnrolled = progress.enrolledStreamIds.contains(selectedStream.id)
+                        Button(
+                            onClick = { onToggleEnrollStream(selectedStream.id) },
+                            colors = ButtonDefaults.buttonColors(
+                                backgroundColor = if (isEnrolled) SuccessEmerald.copy(alpha = 0.2f) else BrandIndigo
+                            ),
+                            shape = RoundedCornerShape(12.dp),
+                            border = if (isEnrolled) androidx.compose.foundation.BorderStroke(1.dp, SuccessEmerald) else null,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = if (isEnrolled) Icons.Default.Check else Icons.Default.Add,
+                                    contentDescription = null,
+                                    tint = if (isEnrolled) SuccessEmerald else Color.White,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = if (isEnrolled) "ENROLLED IN CAREER PATH ✓" else "+ ENROLL IN THIS CAREER PATH",
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (isEnrolled) SuccessEmerald else Color.White
+                                )
+                            }
+                        }
                     }
                 }
 
@@ -206,8 +237,12 @@ fun LearnScreen(
 
             // 3. Career Stream Tiles
             items(careerStreams) { stream ->
+                val isEnrolled = progress.enrolledStreamIds.contains(stream.id)
+                val progressPct = progress.streamProgressMap[stream.id] ?: 0f
                 CareerStreamTile(
                     stream = stream,
+                    isEnrolled = isEnrolled,
+                    progressPercent = progressPct,
                     onClick = { onSelectStream(stream) }
                 )
                 Spacer(modifier = Modifier.height(14.dp))

@@ -73,6 +73,12 @@ class AcademyRepository(context: Context) {
             val streams = AcademyApiClient.fetchCareerStreams()
             _careerStreams.value = streams
 
+            val savedEnrolled = secureStore.getSecureString("enrolled_stream_ids", "sdet")
+            if (savedEnrolled.isNotBlank()) {
+                val set = savedEnrolled.split(",").filter { it.isNotBlank() }.toSet()
+                _userProgress.value = _userProgress.value.copy(enrolledStreamIds = set)
+            }
+
             val list = AcademyApiClient.fetchCourses()
             _courses.value = list
             loadCurriculum(_userProgress.value.activeCourseId)
@@ -127,11 +133,44 @@ class AcademyRepository(context: Context) {
         return content
     }
 
+    fun toggleCareerStreamEnrollment(streamId: String) {
+        val current = _userProgress.value
+        val updated = current.enrolledStreamIds.toMutableSet()
+        val isEnrolling = !updated.contains(streamId)
+        if (isEnrolling) {
+            updated.add(streamId)
+        } else {
+            updated.remove(streamId)
+        }
+        _userProgress.value = current.copy(enrolledStreamIds = updated)
+        secureStore.putSecureString("enrolled_stream_ids", updated.joinToString(","))
+    }
+
+    fun getStreamProgressPercent(stream: CareerStream): Float {
+        val current = _userProgress.value
+        val totalSubTopics = stream.subTopics.size.coerceAtLeast(1)
+        val completedSubTopics = stream.subTopics.count { sub ->
+            current.completedLessonIds.contains(sub.lessonId)
+        }
+        val dynamicRatio = completedSubTopics.toFloat() / totalSubTopics.toFloat()
+        val mappedRatio = current.streamProgressMap[stream.id] ?: 0f
+        return maxOf(dynamicRatio, mappedRatio).coerceIn(0f, 1f)
+    }
+
     fun toggleSubscription(courseId: String) {
         val updated = _courses.value.map {
             if (it.id == courseId) it.copy(isSubscribed = !it.isSubscribed) else it
         }
         _courses.value = updated
+
+        val curr = _userProgress.value
+        val updatedEnrolled = curr.enrolledCourseIds.toMutableSet()
+        if (updatedEnrolled.contains(courseId)) {
+            updatedEnrolled.remove(courseId)
+        } else {
+            updatedEnrolled.add(courseId)
+        }
+        _userProgress.value = curr.copy(enrolledCourseIds = updatedEnrolled)
     }
 
     fun submitMcq(question: Question, selectedIndex: Int): QuizSubmissionResult {

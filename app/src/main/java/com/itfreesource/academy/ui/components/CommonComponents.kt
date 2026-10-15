@@ -233,6 +233,8 @@ fun ContinueLearningCard(
 @Composable
 fun CareerStreamTile(
     stream: CareerStream,
+    isEnrolled: Boolean = false,
+    progressPercent: Float = 0f,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -245,7 +247,11 @@ fun CareerStreamTile(
         elevation = 0.dp,
         modifier = modifier
             .fillMaxWidth()
-            .border(1.dp, if (isLight) SlateBorder else ObsidianBorder, RoundedCornerShape(18.dp))
+            .border(
+                1.dp,
+                if (isEnrolled) SuccessEmerald.copy(alpha = 0.6f) else if (isLight) SlateBorder else ObsidianBorder,
+                RoundedCornerShape(18.dp)
+            )
             .clickable { onClick() }
     ) {
         Column(modifier = Modifier.padding(18.dp)) {
@@ -281,19 +287,34 @@ fun CareerStreamTile(
                     }
                 }
 
-                // Readiness pill
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(SuccessEmerald.copy(alpha = 0.15f))
-                        .padding(horizontal = 8.dp, vertical = 4.dp)
-                ) {
-                    Text(
-                        text = "${stream.readinessPercent}% Ready",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 11.sp,
-                        color = SuccessEmerald
-                    )
+                if (isEnrolled) {
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(SuccessEmerald.copy(alpha = 0.15f))
+                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                    ) {
+                        Text(
+                            text = "ENROLLED ✓",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 10.sp,
+                            color = SuccessEmerald
+                        )
+                    }
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(accentColor.copy(alpha = 0.12f))
+                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                    ) {
+                        Text(
+                            text = "${stream.readinessPercent}% Ready",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 11.sp,
+                            color = accentColor
+                        )
+                    }
                 }
             }
 
@@ -311,6 +332,40 @@ fun CareerStreamTile(
                 color = if (isLight) SlateTextSecondary else ObsidianTextSecondary,
                 maxLines = 2
             )
+
+            if (isEnrolled) {
+                Spacer(modifier = Modifier.height(12.dp))
+                val pctInt = (progressPercent * 100).toInt()
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "LIVE PROGRESS",
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = SuccessEmerald,
+                        letterSpacing = 1.sp
+                    )
+                    Text(
+                        text = "$pctInt% COMPLETED",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = if (isLight) SlateTextPrimary else ObsidianTextPrimary
+                    )
+                }
+                Spacer(modifier = Modifier.height(6.dp))
+                LinearProgressIndicator(
+                    progress = progressPercent,
+                    color = SuccessEmerald,
+                    backgroundColor = if (isLight) SlateBorder else ObsidianBorder,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(6.dp)
+                        .clip(RoundedCornerShape(3.dp))
+                )
+            }
 
             Spacer(modifier = Modifier.height(14.dp))
             Row(

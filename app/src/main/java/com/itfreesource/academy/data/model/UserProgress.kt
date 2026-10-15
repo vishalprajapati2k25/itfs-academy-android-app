@@ -16,6 +16,9 @@ data class UserProgress(
     val lastActiveStreamTitle: String = "SDET & Automation",
     val lastActiveSubTopicTitle: String = "Playwright E2E Mastery",
     val lastActiveStepNumber: Int = 2,
+    val enrolledStreamIds: Set<String> = setOf("sdet"),
+    val enrolledCourseIds: Set<String> = setOf("playwright"),
+    val streamProgressMap: Map<String, Float> = mapOf("sdet" to 0.40f, "developer" to 0.25f, "security" to 0.15f, "programming" to 0.10f),
     val bookmarkedQuestionIds: Set<String> = emptySet(),
     val completedLessonIds: Set<String> = setOf("sdet_playwright_l1")
 )
